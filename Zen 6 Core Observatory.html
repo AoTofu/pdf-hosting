@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zen 6 Core Observatory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e5e9f0; --sd:#bec5d2; --sl:#ffffff; --tx:#2d3445; --mu:#768096; --fa:#a5adbf;
+  --ac:#4f6bf5; --ac2:#7c5cf6; --ok:#16a34a; --bad:#e5484d; --warn:#e8930c; --cy:#0ea5c6;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--tx);font-family:Inter,'Noto Sans JP',system-ui,sans-serif;font-size:12px;overflow:hidden;-webkit-font-smoothing:antialiased}
+#app{display:grid;grid-template-columns:304px minmax(0,1fr) 340px;grid-template-rows:68px minmax(0,1fr);gap:18px;padding:16px 18px 18px;height:100vh}
+.neu{background:var(--bg);border-radius:20px;box-shadow:8px 8px 18px var(--sd),-8px -8px 18px var(--sl)}
+.inset{background:var(--bg);border-radius:14px;box-shadow:inset 4px 4px 9px var(--sd),inset -4px -4px 9px var(--sl)}
+header{grid-column:1/-1;display:flex;align-items:center;gap:18px;padding:0 16px 0 14px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.logo{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font:800 15px var(--mono);color:var(--ac);flex:none;position:relative}
+.logo::after{content:'';position:absolute;inset:9px;border-radius:9px;border:2px dashed #4f6bf555;animation:spin 9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.brand .t1{font-weight:800;letter-spacing:.14em;font-size:14px;white-space:nowrap}
+.brand .t2{color:var(--mu);font-size:11px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chips{display:flex;gap:10px;margin-left:auto}
+.chip{padding:6px 12px;min-width:96px;border-radius:13px}
+.chip .k{font:600 9px var(--mono);letter-spacing:.16em;color:var(--mu)}
+.chip .v{font:700 16px var(--mono);margin-top:1px;white-space:nowrap}
+.ctrls{display:flex;gap:9px;align-items:center}
+.btn{border:none;background:var(--bg);border-radius:12px;box-shadow:4px 4px 9px var(--sd),-4px -4px 9px var(--sl);padding:8px 12px;cursor:pointer;color:var(--tx);font:600 11px Inter,'Noto Sans JP',sans-serif;transition:transform .12s,box-shadow .12s,color .12s;white-space:nowrap}
+.btn:hover{transform:translateY(-1px);color:var(--ac)}
+.btn:active,.btn.on{box-shadow:inset 3px 3px 7px var(--sd),inset -3px -3px 7px var(--sl);color:var(--ac);transform:none}
+.ib{width:38px;height:38px;padding:0;display:grid;place-items:center;font-size:14px}
+.spd{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:13px}
+.spd .v{font:700 12px var(--mono);min-width:70px;text-align:right}
+input[type=range]{-webkit-appearance:none;appearance:none;height:8px;border-radius:8px;background:var(--bg);box-shadow:inset 2px 2px 5px var(--sd),inset -2px -2px 5px var(--sl);outline:none;width:120px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:linear-gradient(145deg,#f4f6fa,#d3d9e3);box-shadow:3px 3px 6px var(--sd),-2px -2px 5px var(--sl);cursor:pointer;border:3px solid var(--bg)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#eef1f6;box-shadow:3px 3px 6px var(--sd),-2px -2px 5px var(--sl);border:none}
+.col{overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:18px;padding:6px 12px 20px 6px;margin:-6px -12px -6px -6px;min-height:0}
+.col::-webkit-scrollbar{width:6px}.col::-webkit-scrollbar-thumb{background:#c9cfda;border-radius:6px}
+.card{padding:14px 14px 16px}
+.card h3{margin:0 0 11px;font:700 10px var(--mono);letter-spacing:.18em;color:var(--mu);text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.card h3::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--ac);box-shadow:0 0 0 3px #4f6bf522;animation:blink 2.4s ease-in-out infinite}
+.card h3 .r{margin-left:auto;font-weight:600;letter-spacing:.06em;text-transform:none;color:var(--fa)}
+@keyframes blink{50%{box-shadow:0 0 0 6px #4f6bf500}}
+.scen{display:grid;grid-template-columns:30px 1fr;gap:2px 10px;padding:8px 10px;border-radius:14px;cursor:pointer;transition:box-shadow .15s,transform .15s;margin-bottom:6px;align-items:center}
+.scen:hover{box-shadow:4px 4px 9px var(--sd),-4px -4px 9px var(--sl);transform:translateY(-1px)}
+.scen.on{box-shadow:inset 3px 3px 8px var(--sd),inset -3px -3px 8px var(--sl);transform:none}
+.scen .no{grid-row:1/3;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font:700 11px var(--mono);color:var(--mu);box-shadow:3px 3px 6px var(--sd),-3px -3px 6px var(--sl)}
+.scen.on .no{color:#fff;background:linear-gradient(135deg,var(--ac),var(--ac2));box-shadow:2px 2px 6px #4f6bf566}
+.scen .nm{font-weight:700;font-size:12px}
+.scen .tg{display:flex;gap:4px;flex-wrap:wrap}
+.tag{font:600 8.5px var(--mono);letter-spacing:.08em;padding:1px 6px;border-radius:6px;background:#dde3ee;color:#5e6880}
+.tag.FE{background:#fdf0cf;color:#9a6a07}.tag.EXEC{background:#d9f3e7;color:#167452}.tag.MEM{background:#e9e1ff;color:#6440c9}.tag.BR{background:#ffe0e1;color:#b4323b}
+#brief .ttl{font-weight:800;font-size:15px;margin-bottom:6px}
+#brief p{margin:0 0 10px;line-height:1.7;color:#4a5265}
+#brief ul{margin:0 0 6px;padding:0;list-style:none}
+#brief li{position:relative;padding:5px 0 5px 18px;line-height:1.55;color:#4a5265;border-top:1px dashed #cfd5e0}
+#brief li::before{content:'▸';position:absolute;left:3px;color:var(--ac)}
+.prm{margin-top:10px;padding:10px 12px;border-radius:12px}
+.prm label{display:flex;justify-content:space-between;font-weight:600;margin-bottom:6px}
+.prm label b{font:700 11px var(--mono);color:var(--ac)}
+.prm input{width:100%}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.grid2 .btn{padding:9px 6px;font-size:10.5px;text-align:center;white-space:normal;line-height:1.3}
+.sw{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-top:1px dashed #cfd5e0;gap:10px}
+.sw:first-of-type{border-top:none}
+.sw span{line-height:1.4}.sw small{display:block;color:var(--mu);font-size:10px}
+.tog{width:44px;height:24px;border-radius:14px;position:relative;cursor:pointer;flex:none;box-shadow:inset 3px 3px 6px var(--sd),inset -3px -3px 6px var(--sl)}
+.tog::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#f3f5f9;box-shadow:2px 2px 4px var(--sd);transition:left .2s,background .2s}
+.tog.on::after{left:23px;background:linear-gradient(135deg,var(--ac),var(--ac2))}
+#center{display:grid;grid-template-rows:minmax(0,1fr) 262px;gap:18px;min-width:0;min-height:0}
+#vp{position:relative;overflow:hidden;min-height:0;border-radius:22px}
+#vp canvas.three{position:absolute;inset:0;width:100%;height:100%;display:block;border-radius:22px}
+.ov{position:absolute;z-index:3}
+#camBar{top:14px;left:14px;display:flex;gap:7px;flex-wrap:wrap;max-width:62%}
+#camBar .btn{padding:6px 10px;font-size:10.5px;background:#e5e9f0e8}
+#banner{top:14px;right:14px;max-width:44%;padding:10px 14px;border-radius:16px;background:#e5e9f0ee}
+#banner .k{font:700 9px var(--mono);letter-spacing:.16em;color:var(--mu)}
+#banner .m{font-weight:700;font-size:12.5px;margin-top:3px;line-height:1.45;transition:color .3s}
+#banner .s{font:600 10.5px var(--mono);color:var(--mu);margin-top:3px}
+#feInd{top:96px;right:14px;display:flex;gap:6px}
+.pill{font:700 9.5px var(--mono);letter-spacing:.06em;padding:5px 8px;border-radius:9px;color:var(--fa);background:#e5e9f0e8;box-shadow:2px 2px 5px var(--sd),-2px -2px 5px var(--sl);transition:all .2s}
+.pill.on{color:#fff;box-shadow:0 0 0 2px #ffffffaa,0 4px 14px var(--pc,#4f6bf5)88;background:var(--pc,#4f6bf5)}
+#legend{left:14px;bottom:14px;display:flex;gap:10px;flex-wrap:wrap;max-width:58%;padding:8px 12px;border-radius:14px;background:#e5e9f0e0}
+#legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+#legend span{font:600 10px var(--mono);color:#56607a;white-space:nowrap}
+#hint{right:14px;bottom:14px;font:500 10px var(--mono);color:var(--mu);background:#e5e9f0d8;padding:6px 10px;border-radius:10px}
+#toasts{right:14px;top:132px;display:flex;flex-direction:column;gap:8px;align-items:flex-end;pointer-events:none}
+.toast{padding:9px 14px;border-radius:13px;background:#eef1f6f2;box-shadow:5px 5px 12px var(--sd),-4px -4px 10px var(--sl);font-weight:700;font-size:12px;border-left:4px solid var(--c,#4f6bf5);animation:tin .35s cubic-bezier(.2,1.4,.4,1);max-width:340px;line-height:1.45}
+.toast small{display:block;font:500 10px var(--mono);color:var(--mu);margin-top:2px}
+@keyframes tin{from{opacity:0;transform:translateX(40px) scale(.9)}}
+.toast.out{transition:all .4s;opacity:0;transform:translateX(30px)}
+#follow{left:14px;top:104px;padding:10px 12px;border-radius:14px;background:#e5e9f0ee;font:600 11px var(--mono);display:none;min-width:250px;line-height:1.6}
+#follow b{color:var(--ac)}
+#bottom{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr) minmax(0,1.2fr);gap:18px;min-height:0}
+#bottom .card{display:flex;flex-direction:column;min-height:0;padding:12px 14px 14px}
+#bottom canvas{flex:1;width:100%;min-height:0;min-width:0;display:block}
+#bottom .card{min-width:0;overflow:hidden}
+#bottom h3{white-space:nowrap}
+.tabs{display:flex;gap:5px;margin-left:auto}
+.tabs .btn{padding:3px 8px;font:700 9px var(--mono);border-radius:8px;letter-spacing:.04em}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.kpi{padding:10px 12px;border-radius:14px;position:relative;overflow:hidden}
+.kpi .k{font:700 9px var(--mono);letter-spacing:.14em;color:var(--mu)}
+.kpi .v{font:800 22px var(--mono);margin-top:2px;letter-spacing:-.02em}
+.kpi .v small{font-size:11px;color:var(--mu);font-weight:600;margin-left:3px}
+.kpi.big{grid-column:1/-1}
+.kpi.big .v{font-size:34px}
+.kpi canvas{position:absolute;right:8px;bottom:8px;width:58%;height:44px}
+.gauges{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 4px}
+.gauge{text-align:center}
+.gauge svg{width:62px;height:62px;display:block;margin:0 auto}
+.gauge .l{font:700 9px var(--mono);color:var(--mu);letter-spacing:.06em;margin-top:2px}
+.occ{display:grid;grid-template-columns:78px 1fr 64px;align-items:center;gap:8px;margin:5px 0;font:600 10px var(--mono)}
+.occ .tr{height:10px;border-radius:6px;box-shadow:inset 2px 2px 4px var(--sd),inset -2px -2px 4px var(--sl);overflow:hidden;position:relative}
+.occ .fl{position:absolute;left:0;top:0;bottom:0;border-radius:6px;transition:width .2s,background .3s}
+.occ .vv{text-align:right;color:var(--mu)}
+.occ.mini{grid-template-columns:78px repeat(6,1fr) 30px}
+.occ.mini .tr{height:14px}
+.tdbar{display:flex;height:16px;border-radius:9px;overflow:hidden;box-shadow:inset 2px 2px 4px var(--sd),inset -2px -2px 4px var(--sl);margin-bottom:8px}
+.tdbar div{transition:flex-grow .3s}
+.tdl{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font:600 10px var(--mono);margin-bottom:8px}
+.tdl i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.tdl b{float:right}
+#slots{width:100%;height:84px;display:block;border-radius:10px}
+.ports{display:grid;grid-template-columns:repeat(18,1fr);gap:4px;align-items:end;height:92px}
+.port{display:flex;flex-direction:column;align-items:center;gap:4px;height:100%}
+.port .tr{flex:1;width:100%;border-radius:5px;box-shadow:inset 2px 2px 4px var(--sd),inset -2px -2px 4px var(--sl);position:relative;overflow:hidden}
+.port .fl{position:absolute;left:0;right:0;bottom:0;border-radius:4px;transition:height .2s}
+.port .l{font:700 7.5px var(--mono);color:var(--mu);writing-mode:vertical-rl;transform:rotate(180deg);height:34px;white-space:nowrap}
+#log{height:210px;overflow:hidden;font:500 10.5px var(--mono);padding:8px 10px;line-height:1.55;display:flex;flex-direction:column-reverse}
+#log div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#log .c{color:var(--fa);margin-right:6px}
+#log .t{font-weight:700;margin-right:6px}
+#tip{position:fixed;z-index:50;pointer-events:none;padding:12px 14px;border-radius:15px;background:#eef1f6f5;box-shadow:7px 7px 18px #9aa3b588,-4px -4px 12px #fff;max-width:330px;display:none;font-size:11.5px;line-height:1.6}
+#tip .h{font-weight:800;font-size:13px}
+#tip .s{font:600 10.5px var(--mono);color:var(--ac);margin:2px 0 6px}
+#tip .d{color:#4b5468}
+#tip .live{margin-top:7px;padding-top:7px;border-top:1px dashed #c9cfda;font:600 10.5px var(--mono);color:#3b4356}
+#modal{position:fixed;inset:0;z-index:60;background:#d7dce666;backdrop-filter:blur(6px);display:none;place-items:center}
+#modal .box{width:min(760px,92vw);max-height:84vh;overflow:auto;padding:24px 28px}
+#modal h2{margin:0 0 6px;font-size:18px}
+#modal h4{margin:18px 0 6px;font:700 11px var(--mono);letter-spacing:.14em;color:var(--mu)}
+#modal p,#modal li{line-height:1.75;color:#465066}
+#modal table{border-collapse:collapse;width:100%;font-size:11.5px}
+#modal caption{text-align:left;font:700 11px var(--mono);color:var(--mu);padding:4px 0 6px}
+#modal td,#modal th{padding:5px 8px;border-bottom:1px dashed #cdd3de;text-align:left}
+#modal th{font:700 10px var(--mono);color:var(--mu)}
+#exps{padding:6px 8px;font:600 10px var(--mono);max-height:230px;overflow:auto}
+#exps table{width:100%;border-collapse:collapse}
+#exps caption{text-align:left;color:var(--mu);font-size:9px;padding:2px 0 5px;letter-spacing:.04em}
+#exps th{color:var(--mu);font-size:9px;text-align:right;padding:3px 4px;border-bottom:1px dashed #cdd3de}
+#exps td{text-align:right;padding:4px;border-bottom:1px dashed #dde2ea;white-space:nowrap}
+#exps th:nth-child(2),#exps td:nth-child(2){text-align:left;max-width:120px;overflow:hidden;text-overflow:ellipsis}
+#exps tr.new td{animation:hl 1.6s ease-out}
+@keyframes hl{from{background:#dbe3ff}}
+#exps .empty{color:var(--fa);padding:10px 4px;line-height:1.6;font-family:Inter,'Noto Sans JP',sans-serif;font-weight:500}
+.btn.tour.on{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;box-shadow:0 4px 14px #4f6bf566}
+#tourBar{left:50%;transform:translateX(-50%);bottom:56px;width:240px;height:5px;border-radius:4px;background:#d5dbe5;overflow:hidden;display:none}
+#tourBar div{height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2))}
+#trc{cursor:pointer}
+.col .card>h3{cursor:pointer;user-select:none}
+.col .card>h3::after{content:'▾';margin-left:8px;color:var(--fa);font-size:11px;transition:transform .2s}
+.col .card>h3 .r+*,.col .card>h3 .r{order:1}
+.col .card.cl>h3::after{transform:rotate(-90deg)}
+.col .card.cl>:not(h3){display:none}.col .card.cl>h3{margin-bottom:0}
+#loading{inset:0;display:grid;place-items:center;align-content:center;gap:14px;background:var(--bg);z-index:8;font:700 11px var(--mono);letter-spacing:.14em;color:var(--mu);transition:opacity .5s;border-radius:22px}
+#loading .spin{width:46px;height:46px;border-radius:50%;box-shadow:inset 4px 4px 9px var(--sd),inset -4px -4px 9px var(--sl);position:relative}
+#loading .spin::after{content:'';position:absolute;inset:8px;border-radius:50%;border:3px solid transparent;border-top-color:var(--ac);border-right-color:var(--ac2);animation:spin .9s linear infinite}
+#cmc{cursor:crosshair}
+@media (max-width:1280px){
+  body{overflow:auto}
+  #app{grid-template-columns:1fr;grid-template-rows:auto;height:auto}
+  header{flex-wrap:wrap;padding:12px}
+  .col{overflow:visible;margin:0;padding:0}
+  #center{grid-template-rows:640px auto}
+  #bottom{grid-template-columns:1fr;grid-auto-rows:260px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="neu">
+    <div class="brand">
+      <div class="logo inset">Z6</div>
+      <div><div class="t1">ZEN 6 CORE OBSERVATORY</div><div class="t2">Zen 6ファミリーのブロック図をもとにした、パイプライン挙動の3D可視化シミュレータ</div></div>
+    </div>
+    <div class="chips">
+      <div class="chip inset"><div class="k">CYCLE</div><div class="v" id="hCyc">0</div></div>
+      <div class="chip inset"><div class="k">IPC · 64cyc</div><div class="v" id="hIpc">0.00</div></div>
+      <div class="chip inset"><div class="k">RETIRED</div><div class="v" id="hRet">0</div></div>
+      <div class="chip inset"><div class="k">IN-FLIGHT</div><div class="v" id="hInf">0</div></div>
+    </div>
+    <div class="ctrls">
+      <button class="btn ib" id="bPlay" title="再生と一時停止 · Space">❚❚</button>
+      <button class="btn ib" id="bStep" title="1サイクル進める · →">⏭</button>
+      <button class="btn ib" id="bReset" title="シナリオを最初から · R">↺</button>
+      <div class="spd inset"><span style="font:700 9px var(--mono);color:var(--mu);letter-spacing:.12em">SPEED</span><input type="range" id="spd" min="0" max="100" value="40"><span class="v" id="spdV">8 cyc/s</span></div>
+      <button class="btn tour" id="bTour" title="シナリオを自動で巡回する · T">✦ ツアー</button>
+      <button class="btn" id="bFollow" title="命令を1つ追跡する · F">◉ 追跡</button>
+      <button class="btn" id="bAbout">ⓘ モデル</button>
+    </div>
+  </header>
+
+  <aside class="col" id="left">
+    <section class="card neu"><h3>Scenarios<span class="r">16本</span></h3><div id="scList"></div></section>
+    <section class="card neu" id="brief"></section>
+    <section class="card neu"><h3>Inject</h3>
+      <div class="grid2">
+        <button class="btn" data-inj="br">分岐予測ミスを注入</button>
+        <button class="btn" data-inj="dram">DRAMロードを注入</button>
+        <button class="btn" data-inj="storm">ミスの嵐 ×24</button>
+        <button class="btn" data-inj="nuke">パイプライン全消去</button>
+        <button class="btn" data-inj="wbinvd">全キャッシュ消去</button>
+        <button class="btn" data-inj="tlb">TLB消去</button>
+        <button class="btn" data-inj="bp">分岐予測器リセット</button>
+        <button class="btn" data-inj="ucode">μcode命令を注入</button>
+      </div>
+    </section>
+    <section class="card neu"><h3>Breakpoints<span class="r">発生したら一時停止</span></h3><div id="bks"></div></section>
+    <section class="card neu"><h3>Global Settings</h3><div id="settings"></div>
+      <div class="prm inset" style="margin-top:8px"><label>DRAMレイテンシ<b id="dlV">320 cyc</b></label><input type="range" id="dl" min="120" max="600" step="10" value="320"></div>
+      <div class="prm inset"><label>粒子の密度<b id="dnV">×1.0</b></label><input type="range" id="dn" min="0.2" max="3" step="0.1" value="1"></div>
+    </section>
+  </aside>
+
+  <main id="center">
+    <div id="vp" class="neu">
+      <div class="ov" id="loading"><div class="spin"></div><div>3Dシーンを構築中</div></div>
+      <div class="ov" id="camBar"></div>
+      <div class="ov" id="banner"><div class="k">BOTTLENECK · LIVE</div><div class="m" id="bnM">—</div><div class="s" id="bnS">—</div></div>
+      <div class="ov" id="feInd">
+        <span class="pill" data-fe="opc" style="--pc:#4f6bf5">OP CACHE</span>
+        <span class="pill" data-fe="dec" style="--pc:#16a34a">DECODE</span>
+        <span class="pill" data-fe="ucode" style="--pc:#0ea5c6">MSROM</span>
+        <span class="pill" data-fe="stall" style="--pc:#e5484d">STALL</span>
+        <span class="pill" data-fe="wrong" style="--pc:#8b93a7">WRONG PATH</span>
+      </div>
+      <div class="ov" id="toasts"></div>
+      <div class="ov" id="follow"></div>
+      <div class="ov" id="legend"></div>
+      <div class="ov" id="hint"><span id="fps">—</span> · ドラッグ 回転 · 右ドラッグ 移動 · ホイール ズーム · ダブルクリック 注視 · 1〜0 シナリオ</div>
+      <div class="ov" id="tourBar"><div></div></div>
+    </div>
+    <div id="bottom">
+      <section class="card neu"><h3>Branch Predictor Lab<span class="r" id="bpR"></span></h3><canvas id="bpc"></canvas></section>
+      <section class="card neu"><h3>Cache Map<div class="tabs" id="cTabs"></div></h3><canvas id="cmc"></canvas></section>
+      <section class="card neu"><h3>Pipeline Trace<span class="r">直近64サイクル · 行クリックで追跡</span></h3><canvas id="trc"></canvas></section>
+    </div>
+  </main>
+
+  <aside class="col" id="right">
+    <section class="card neu"><h3>Performance</h3>
+      <div class="kpis">
+        <div class="kpi inset big"><div class="k">IPC · 命令/サイクル</div><div class="v" id="kIpc">0.00</div><canvas id="spark"></canvas></div>
+        <div class="kpi inset"><div class="k">BRANCH MPKI</div><div class="v" id="kMpki">0.0</div></div>
+        <div class="kpi inset"><div class="k">FLUSHES</div><div class="v" id="kFl">0<small>/0 ops</small></div></div>
+        <div class="kpi inset"><div class="k">AVG LOAD LAT</div><div class="v" id="kLl">0<small>cyc</small></div></div>
+        <div class="kpi inset"><div class="k">DRAM · PREFETCH</div><div class="v" id="kDr">0<small>/0</small></div></div>
+      </div>
+    </section>
+    <section class="card neu"><h3>Experiments<span class="r" id="mkR">計測 0 cyc</span></h3>
+      <div style="display:flex;gap:9px;margin-bottom:10px"><button class="btn" id="bSnap" style="flex:1">● 計測区間を記録 · S</button><button class="btn" id="bMark">区間リセット</button></div>
+      <div id="exps" class="inset"></div></section>
+    <section class="card neu"><h3>Hit Rates<span class="r">移動平均</span></h3><div class="gauges" id="gauges"></div></section>
+    <section class="card neu"><h3>Queues &amp; Buffers</h3><div id="occs"></div></section>
+    <section class="card neu"><h3>Top-Down · Dispatch Slots</h3>
+      <div class="tdbar" id="tdbar"></div><div class="tdl" id="tdl"></div>
+      <canvas id="slots"></canvas>
+    </section>
+    <section class="card neu"><h3>Execution Ports<span class="r">稼働率</span></h3><div class="ports" id="ports"></div></section>
+    <section class="card neu"><h3>Event Log</h3><div id="log" class="inset"></div></section>
+  </aside>
+</div>
+<div id="tip"></div>
+<div id="modal"><div class="box neu" id="mbox"></div></div>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
+import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+
+/* ============================================================
+   0. utilities
+   ============================================================ */
+const $=s=>document.querySelector(s);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+let rng=mulberry32(20261111);
+const hx=n=>'0x'+Math.floor(n).toString(16);
+let NOW=performance.now()/1000;
+const fmtN=n=>n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e4?(n/1e3).toFixed(1)+'K':String(Math.round(n));
+
+/* ============================================================
+   1. configuration · values from the diagram + model assumptions
+   ============================================================ */
+const CFG={bk:{misp:false,dram:false,rob:false,imiss:false},prefetch:true,opcache:true,huge:false,decW:4,dramLat:320,density:1,links:true,labels:true,rotate:false,follow:false,shadows:true};
+const ROB_CAP=576,MOQ_CAP=96,IS_CAP=24,NSQ_CAP=96,FS_CAP=46,LQ_CAP=288,SQ_CAP=128,L2MAB_CAP=127,L3MAB_CAP=480;
+const DRAM_GAP=3;
+const LATS={alu:1,mul:3,div:14,br:1,st:1,fma:4,fmul:3,fadd:2,fst:2};
+const CLS={alu:'alu',mul:'mul',div:'div',br:'br',ld:'agu',st:'agu',fma:'fma',fmul:'fmul',fadd:'fadd',fst:'fst',zero:'elim',mov:'elim'};
+const FPC=new Set(['fma','fmul','fadd','fst']);
+const TCOL={alu:'#3b82f6',mul:'#6366f1',div:'#a855f7',br:'#eab308',ld:'#10b981',st:'#f97316',fma:'#ec4899',fmul:'#f472b6',fadd:'#d946ef',fst:'#f59e0b',zero:'#94a3b8',mov:'#94a3b8'};
+const TNAME={alu:'ALU',mul:'MUL',div:'DIV',br:'BRANCH',ld:'LOAD',st:'STORE',fma:'FMA',fmul:'FMUL',fadd:'FADD',fst:'FSTORE',zero:'ZERO',mov:'MOV'};
+const LVLCOL={L1:'#10b981',L2:'#06b6d4',L3:'#8b5cf6',DRAM:'#ef4444',MSHR:'#f59e0b',PF:'#22d3ee',STLF:'#f97316'};
+const UNITS=[
+ {id:'u0',lbl:'ALU',x:180,caps:['alu'],s:0},{id:'u1',lbl:'AGU',x:260,caps:['agu'],s:0},
+ {id:'u2',lbl:'ALU·MUL',x:330,caps:['alu','mul'],s:1},{id:'u3',lbl:'AGU',x:400,caps:['agu'],s:1},
+ {id:'u4',lbl:'ALU·MUL',x:480,caps:['alu','mul'],s:2},{id:'u5',lbl:'AGU',x:547,caps:['agu'],s:2},
+ {id:'u6',lbl:'ALU·BR',x:622,caps:['alu','br'],s:3},{id:'u7',lbl:'AGU',x:688,caps:['agu'],s:3},
+ {id:'u8',lbl:'ALU·DIV',x:770,caps:['alu','div'],s:4},{id:'u9',lbl:'BRANCH',x:840,caps:['br'],s:4},
+ {id:'u10',lbl:'ALU',x:920,caps:['alu'],s:5},{id:'u11',lbl:'BRANCH',x:990,caps:['br'],s:5},
+];
+const FUNITS=[
+ {id:'f0',lbl:'FMA·FMUL',x:1078,caps:['fma','fmul'],s:0},{id:'f1',lbl:'FADD',x:1153,caps:['fadd'],s:0},
+ {id:'f2',lbl:'FMA·FMUL',x:1228,caps:['fma','fmul'],s:1},{id:'f3',lbl:'FADD',x:1299,caps:['fadd'],s:1},
+ {id:'f4',lbl:'FSTORE·F2I',x:1370,caps:['fst'],s:2},{id:'f5',lbl:'FSTORE·F2I',x:1450,caps:['fst'],s:2},
+];
+UNITS.forEach((u,i)=>u.i=i);FUNITS.forEach((u,i)=>u.i=i);
+const SCHED_UNITS=[0,1,2,3,4,5].map(k=>UNITS.filter(u=>u.s===k));
+const SCHED_CAPS=SCHED_UNITS.map(us=>new Set(us.flatMap(u=>u.caps)));
+const FS_UNITS=[0,1,2].map(k=>FUNITS.filter(u=>u.s===k));
+const FS_CAPS=FS_UNITS.map(us=>new Set(us.flatMap(u=>u.caps)));
+
+/* ============================================================
+   2. caches / TLB / branch predictor
+   ============================================================ */
+const EV={HIT:1,MISS:2,FILL:3,EVICT:4,PF:5};
+class Cache{
+  constructor(name,sets,ways){
+    this.name=name;this.sets=sets;this.ways=ways;const n=sets*ways;
+    this.tag=new Int32Array(n).fill(-1);this.age=new Float64Array(n);
+    this.ct=new Float32Array(n);this.ck=new Uint8Array(n);
+    this.st=new Float32Array(sets);this.sk=new Uint8Array(sets);this.vc=new Uint8Array(sets);
+    this.clk=0;this.hits=0;this.miss=0;this.ema=-1;this.evicts=0;this.valid=0;
+  }
+  si(line){return ((line%this.sets)+this.sets)%this.sets}
+  rate(h){this.ema=this.ema<0?h:this.ema*0.985+h*0.015}
+  has(line){const b=this.si(line)*this.ways;for(let w=0;w<this.ways;w++)if(this.tag[b+w]===line)return true;return false}
+  lookup(line,count=true){
+    const s=this.si(line),b=s*this.ways;
+    for(let w=0;w<this.ways;w++){if(this.tag[b+w]===line){this.age[b+w]=++this.clk;if(count){if(this.blk)V.way(this.blk,w,EV.HIT);this.hits++;this.rate(1);this.ct[b+w]=NOW;this.ck[b+w]=EV.HIT;this.st[s]=NOW;this.sk[s]=EV.HIT}return true}}
+    if(count){this.miss++;this.rate(0);this.st[s]=NOW;this.sk[s]=EV.MISS}
+    return false;
+  }
+  fill(line,kind=EV.FILL){
+    const s=this.si(line),b=s*this.ways;let v=-1,best=Infinity;
+    for(let w=0;w<this.ways;w++){const t=this.tag[b+w];
+      if(t===line){v=b+w;best=-2;break}
+      if(t===-1){if(best>-1){v=b+w;best=-1}}
+      else if(best>=0&&this.age[b+w]<best){best=this.age[b+w];v=b+w}}
+    const ev=best>=0;
+    if(ev)this.evicts++;
+    if(best===-1){this.vc[s]++;this.valid++}
+    this.tag[v]=line;this.age[v]=++this.clk;this.ct[v]=NOW;this.ck[v]=ev?EV.EVICT:kind;this.st[s]=NOW;this.sk[s]=ev?EV.EVICT:kind;
+    if(this.blk)V.way(this.blk,v-b,ev?EV.EVICT:kind);
+    return ev;
+  }
+  flush(){this.tag.fill(-1);this.vc.fill(0);this.valid=0;this.ct.fill(0)}
+  resetStats(){this.hits=0;this.miss=0}
+}
+const L1I=new Cache('L1I',64,8),L1D=new Cache('L1D',64,12),L2=new Cache('L2',1024,16),L3=new Cache('L3',49152,16),OPC=new Cache('OPC',32,16);
+const DTLB1=new Cache('DTLB',1,96),DTLB2=new Cache('DTLB2',256,16),ITLB1=new Cache('ITLB',1,64),ITLB2=new Cache('ITLB2',128,16);
+const ALLC=[L1I,L1D,L2,L3,OPC,DTLB1,DTLB2,ITLB1,ITLB2];
+
+const TAGE_L=[5,11,23,47,97],TN=TAGE_L.length;
+class Fold{constructor(L,W){this.L=L;this.W=W;this.v=0}upd(nb,ob){let v=(this.v<<1)|nb;v^=ob<<(this.L%this.W);v^=v>>>this.W;this.v=v&((1<<this.W)-1)}}
+const BP={
+  base:new Uint8Array(4096),bT:new Float32Array(4096),bK:new Uint8Array(4096),
+  T:TAGE_L.map(L=>({L,ctr:new Uint8Array(1024),tag:new Int16Array(1024),u:new Uint8Array(1024),fi:new Fold(L,10),f1:new Fold(L,9),f2:new Fold(L,8),cT:new Float32Array(1024),cK:new Uint8Array(1024),alloc:0})),
+  hb:new Uint8Array(256),hp:0,hist:[],tick:0,prov:new Float32Array(TN+1),lastProv:-2,
+  ras:new Array(64).fill(0),rasTop:0,rasCnt:0,rasOv:0,rasEvt:new Float32Array(64),rasEvK:new Uint8Array(64),
+  l1:new Map(),l2:new Map(),cond:0,misp:0,retN:0,retMisp:0,btbA:0,btbH:0,last:[],
+  reset(){this.base.fill(1);this.bT.fill(0);for(const t of this.T){t.ctr.fill(4);t.tag.fill(-1);t.u.fill(0);t.fi.v=t.f1.v=t.f2.v=0;t.cT.fill(0);t.alloc=0}
+    this.hb.fill(0);this.hp=0;this.hist=[];this.prov.fill(0);this.lastProv=-2;this.last=[];this.ras.fill(0);this.rasTop=0;this.rasCnt=0;this.rasOv=0;this.l1.clear();this.l2.clear()},
+  resetStats(){this.cond=0;this.misp=0;this.retN=0;this.retMisp=0;this.btbA=0;this.btbH=0;this.rasOv=0;for(const t of this.T)t.alloc=0},
+  ctrUp(arr,i,taken,max){if(taken){if(arr[i]<max)arr[i]++}else if(arr[i]>0)arr[i]--},
+  predict(pc){const a=pc>>>2,bi=a&4095;const r={bi,idx:new Int16Array(TN),tg:new Int16Array(TN),prov:-1,alt:-1};
+    for(let i=0;i<TN;i++){const t=this.T[i];r.idx[i]=(a^(a>>>10)^t.fi.v^(i*331))&1023;r.tg[i]=(a^(a>>>9)^t.f1.v^(t.f2.v<<1))&511}
+    for(let i=TN-1;i>=0;i--){if(this.T[i].tag[r.idx[i]]===r.tg[i]){if(r.prov<0)r.prov=i;else{r.alt=i;break}}}
+    r.bp=this.base[bi]>=2;r.altP=r.alt>=0?this.T[r.alt].ctr[r.idx[r.alt]]>=4:r.bp;r.weak=false;
+    if(r.prov>=0){const t=this.T[r.prov],i=r.idx[r.prov];r.pp=t.ctr[i]>=4;r.weak=(t.ctr[i]===3||t.ctr[i]===4)&&t.u[i]===0;r.taken=r.weak?r.altP:r.pp}
+    else{r.pp=r.bp;r.taken=r.bp}
+    return r},
+  update(r,taken,misp,op){
+    const P=r.prov;
+    if(P>=0){const t=this.T[P],i=r.idx[P];this.ctrUp(t.ctr,i,taken,7);
+      if(r.pp!==r.altP)this.ctrUp(t.u,i,r.pp===taken,3);
+      if(r.weak&&r.alt<0)this.ctrUp(this.base,r.bi,taken,3);
+      t.cT[i]=NOW;t.cK[i]=misp?2:1}
+    else{this.ctrUp(this.base,r.bi,taken,3);this.bT[r.bi]=NOW;this.bK[r.bi]=misp?2:1}
+    if(misp&&P<TN-1){let done=false;
+      for(let j=P+1;j<TN;j++){const t=this.T[j],i=r.idx[j];if(t.u[i]===0){t.tag[i]=r.tg[j];t.ctr[i]=taken?4:3;t.cT[i]=NOW;t.cK[i]=3;t.alloc++;done=true;break}}
+      if(!done)for(let j=P+1;j<TN;j++){const t=this.T[j],i=r.idx[j];if(t.u[i]>0)t.u[i]--}}
+    if((++this.tick&16383)===0)for(const t of this.T)for(let i=0;i<1024;i++)t.u[i]>>=1;
+    for(let k=0;k<=TN;k++)this.prov[k]*=.99;this.prov[P+1]+=.01;this.lastProv=P;
+    const nb=taken?1:0;this.hp=(this.hp+1)&255;this.hb[this.hp]=nb;
+    for(const t of this.T){const ob=this.hb[(this.hp-t.L)&255];t.fi.upd(nb,ob);t.f1.upd(nb,ob);t.f2.upd(nb,ob)}
+    this.hist.unshift(nb);if(this.hist.length>100)this.hist.length=100;
+    this.cond++;if(misp)this.misp++;
+    this.last.unshift({asm:op.asm,p:misp?!taken:taken,a:taken,ok:!misp,prov:P,alt:r.weak});if(this.last.length>8)this.last.length=8;
+  },
+  btb(pc){this.btbA++;
+    if(this.l1.has(pc)){this.l1.delete(pc);this.l1.set(pc,1);this.btbH++;return 1}
+    let r=0;if(this.l2.has(pc)){this.l2.delete(pc);r=2}
+    this.l1.set(pc,1);if(this.l1.size>16384){const k=this.l1.keys().next().value;this.l1.delete(k);this.l2.set(k,1);if(this.l2.size>8192)this.l2.delete(this.l2.keys().next().value)}
+    return r},
+  push(addr){this.rasTop=(this.rasTop+1)%64;if(this.rasCnt===64)this.rasOv++;this.ras[this.rasTop]=addr;this.rasCnt=Math.min(64,this.rasCnt+1);this.rasEvt[this.rasTop]=NOW;this.rasEvK[this.rasTop]=1},
+  pop(){const v=this.ras[this.rasTop];this.rasEvt[this.rasTop]=NOW;this.rasEvK[this.rasTop]=2;this.rasTop=(this.rasTop+63)%64;this.rasCnt=Math.max(0,this.rasCnt-1);return v},
+};
+BP.reset();
+
+/* ============================================================
+   3. simulation state
+   ============================================================ */
+let SIM;
+function newSim(){
+  return{cycle:0,nextId:1,fe:{stallUntil:0,reason:'',state:'',src:'opc',wrongPath:false,wpPC:0,curLine:-1,ucodeLeft:0,ucodeTotal:0,ucodePC:0,forceMisp:false,recoverUntil:0,regs:{},lastOp:null,lastLoad:null,peek:null},
+    fePipe:[],rob:[],robTail:0,intS:[[],[],[],[],[],[]],nsq:[],fpS:[[],[],[]],exec:[],sqList:[],lq:0,sq:0,
+    uBusy:new Float64Array(12),fBusy:new Float64Array(6),uUtil:new Float32Array(12),fUtil:new Float32Array(6),uHit:new Uint8Array(12),fHit:new Uint8Array(6),
+    inflight:new Map(),dramFree:0,pfT:Array.from({length:8},()=>({last:-99,stride:0,conf:0,next:-1,lru:0})),mab2:0,mab3:0,
+    trace:[],retHist:new Uint8Array(256),slotHist:[],injectQ:[],dispReason:'',
+    td:{ret:0,bad:0,fe:0,be:0},tdE:{ret:0,bad:0,fe:0,be:0},
+    stats:{inst:0,uops:0,flushes:0,flushedOps:0,dram:0,pf:0,walks:0,l1im:0,ldN:0,ldLat:0,elim:0,stlf:0},
+    gen:null};
+}
+SIM=newSim();
+
+/* ============================================================
+   4. memory hierarchy behaviour
+   ============================================================ */
+const lvlLat=l=>l==='L2'?14:l==='L3'?50:CFG.dramLat;
+function fromBelow(line,c){
+  let lvl;
+  if(L2.lookup(line))lvl='L2';else if(L3.lookup(line)){lvl='L3';L2.fill(line)}else{lvl='DRAM';L3.fill(line);L2.fill(line)}
+  let lat=lvlLat(lvl);
+  if(lvl==='DRAM'){const st=Math.max(c,SIM.dramFree);SIM.dramFree=st+DRAM_GAP;lat+=st-c;SIM.stats.dram++}
+  return{lvl,lat};
+}
+function dtlb(addr){
+  const pg=CFG.huge?Math.floor(addr/2097152)+(1<<28):Math.floor(addr/4096);
+  if(DTLB1.lookup(pg))return 0;
+  if(DTLB2.lookup(pg)){DTLB1.fill(pg);return 7}
+  DTLB2.fill(pg);DTLB1.fill(pg);SIM.stats.walks++;V.walk();return 30;
+}
+function memAccess(addr,c,op){
+  const line=Math.floor(addr/64);const t=dtlb(addr);
+  const f=SIM.inflight.get(line);
+  if(f){if(f.ready>c){L1D.lookup(line,false);if(f.pf){L1D.hits++;L1D.rate(1)}else{L1D.miss++;L1D.rate(0)}pfTrain(line,c,op);return{lvl:f.pf?'PF':'MSHR',lat:Math.max(4,f.ready-c)+t}}SIM.inflight.delete(line)}
+  if(L1D.lookup(line)){pfTrain(line,c,op);return{lvl:'L1',lat:4+t}}
+  const r=fromBelow(line,c);L1D.fill(line);
+  SIM.inflight.set(line,{ready:c+r.lat+t,lvl:r.lvl,pf:false});
+  V.memMiss(r.lvl,op,r.lat+t);
+  if(r.lvl==='DRAM'&&CFG.bk.dram&&V.enabled&&op&&!op.wrong)SIM.brk=`DRAMアクセス · ${op.asm}`;
+  if(r.lvl==='DRAM')logEv('MEM',`${op?op.asm:'load'} → DRAM ${r.lat+t}cyc`,'#ef4444',true);
+  pfTrain(line,c,op);
+  return{lvl:r.lvl,lat:4+r.lat+t};
+}
+function pfTrain(line,c,op){
+  if(!CFG.prefetch||(op&&op.wrong))return;
+  const TB=SIM.pfT;let e=null;for(const s of TB){if(Math.abs(line-s.last)<=4){e=s;break}}
+  if(!e){e=TB.reduce((a,b)=>a.lru<b.lru?a:b);e.last=line;e.stride=0;e.conf=0;e.next=-1;e.lru=c;return}
+  e.lru=c;const d=line-e.last;if(d===0)return;
+  if(d===e.stride)e.conf=Math.min(e.conf+1,6);else{e.stride=d;e.conf=0;e.next=line+d}
+  e.last=line;
+  if(e.conf>=2){if((e.next-line)*e.stride<=0)e.next=line+e.stride;let n=0;
+    while(n<4&&(e.next-line)/e.stride<=64){pfLine(e.next,c);e.next+=e.stride;n++}}
+}
+function pfLine(line,c){
+  if(line<0||L1D.has(line)||SIM.inflight.has(line))return;
+  const r=fromBelow(line,c);L1D.fill(line,EV.PF);SIM.inflight.set(line,{ready:c+r.lat,lvl:r.lvl,pf:true});SIM.stats.pf++;V.prefetch(r.lvl,r.lat);
+}
+function lineCheck(line,pc,c){
+  if(CFG.opcache&&OPC.lookup(line))return{src:'opc'};
+  const pg=Math.floor(pc/4096);let t=0;
+  if(!ITLB1.lookup(pg)){if(ITLB2.lookup(pg)){ITLB1.fill(pg);t=4}else{ITLB2.fill(pg);ITLB1.fill(pg);t=25}}
+  if(!L1I.lookup(line)){const r=fromBelow(line,c);L1I.fill(line);for(let k=1;k<=3;k++)if(!L1I.has(line+k)){fromBelow(line+k,c);L1I.fill(line+k,EV.PF)}SIM.stats.l1im++;V.imiss(r.lvl,r.lat);if(CFG.bk.imiss&&V.enabled)SIM.brk=`L1Iミス · ${hx(pc)}`;logEv('FE',`L1Iミス ${hx(pc)} → ${r.lvl} ${r.lat}cyc`,'#e8930c');return{stall:r.lat+t,reason:`L1Iミス → ${r.lvl}`}}
+  if(t)return{stall:t,reason:'ITLBミス'};
+  if(CFG.opcache)OPC.fill(line);
+  return{src:'dec'};
+}
+
+/* ============================================================
+   5. pipeline stages
+   ============================================================ */
+let vizP=1;
+function peek(){const fe=SIM.fe;if(!fe.peek){if(SIM.injectQ.length){const q=SIM.injectQ.shift();q.pc=fe.lastOp?fe.lastOp.pc:0x401000;fe.peek=q}else fe.peek=SIM.gen.next()}return fe.peek}
+const WASM={alu:'add r10, r11',ld:'mov r12, [rbp+0x40]',br:'jle .L77',mul:'imul r9, r8',st:'mov [rsp+0x18], r13'};
+function junkInst(){const fe=SIM.fe;fe.wpPC+=4;const y=rng();const type=y<.55?'alu':y<.78?'ld':y<.88?'br':y<.95?'mul':'st';
+  return{type,pc:fe.wpPC,asm:WASM[type],addr:0x10000000+Math.floor(rng()*512)*8,brKind:'cond',taken:false}}
+
+function pushOp(inst,src,depth,wrong,c){
+  const fe=SIM.fe;
+  const op={id:SIM.nextId++,type:inst.type,asm:inst.asm,pc:inst.pc,addr:inst.addr||0,w:inst.w||64,wrong,src,
+    tF:c,arrive:c+depth,tD:-1,tI:-1,tC:-1,tR:-1,tX:-1,done:false,doneCycle:1e18,deps:null,mispredict:false,lvl:'',
+    first:!inst.uc,ff:!!inst.ff,flushed:false,slot:-1,sk:-1,addrKnown:false};
+  if(!wrong){
+    const rs=inst.r;const arr=rs==null?[]:Array.isArray(rs)?rs:[rs];const deps=[];
+    for(const r of arr){const d=r==='@prev'?fe.lastOp:r==='@load'?fe.lastLoad:fe.regs[r];if(d)deps.push(d)}
+    if(deps.length)op.deps=deps;
+    if(inst.wr)fe.regs[inst.wr]=op;
+    fe.lastOp=op;if(op.type==='ld')fe.lastLoad=op;
+  }
+  op.viz=(V.followWant&&!wrong)||Math.random()<vizP;
+  if(V.followWant&&!wrong&&op.viz){V.followId=op.id;V.followWant=false}
+  SIM.fePipe.push(op);SIM.trace.push(op);if(SIM.trace.length>900)SIM.trace.shift();
+  V.fetch(op,depth);
+  return op;
+}
+function branchFetch(op,inst,c){
+  const fe=SIM.fe;const k=inst.brKind||'cond';let taken=true,misp=false;
+  if(k==='cond'){taken=!!inst.taken;const p=BP.predict(op.pc);let pred=p.taken;if(fe.forceMisp){pred=!taken;fe.forceMisp=false}misp=pred!==taken;BP.update(p,taken,misp,op);op.pred=pred}
+  else if(k==='call'){BP.push(inst.pc+4)}
+  else if(k==='ret'){const t=BP.pop();BP.retN++;misp=t!==inst.ret;if(fe.forceMisp){misp=true;fe.forceMisp=false}if(misp)BP.retMisp++}
+  op.taken=taken;op.mispredict=misp;op.brKind=k;
+  let bubble=0,reason='';
+  if(taken&&!misp){const b=BP.btb(op.pc);if(b===2){bubble=1;reason='L2 BTBヒット'}else if(b===0){bubble=5;reason='BTBミス';V.btbMiss()}}
+  return{taken,misp,bubble,reason};
+}
+function fetchStage(c){
+  const fe=SIM.fe;
+  if(fe.stallUntil>c){fe.state='stall';return}
+  let space=MOQ_CAP-SIM.fePipe.length;
+  if(space<=0){fe.state='full';fe.reason='MOQ満杯';return}
+  if(fe.ucodeLeft>0){
+    const n=Math.min(4,space,fe.ucodeLeft);
+    for(let i=0;i<n;i++){const k=fe.ucodeTotal-fe.ucodeLeft+1;
+      const ty=k%4===0?'st':k%4===2?'ld':'alu';
+      pushOp({type:ty,asm:`μop ${k}/${fe.ucodeTotal} · ${fe.ucodeName}`,pc:fe.ucodePC,addr:0x7a000000+k*64,uc:true},'ucode',7,false,c);fe.ucodeLeft--}
+    fe.state='ucode';fe.src='ucode';if(fe.ucodeLeft===0){fe.stallUntil=c+2;fe.reason='MSROM復帰'}return;
+  }
+  let src=null,width=99,n=0;
+  while(n<width&&space>0){
+    const wrong=fe.wrongPath;let inst;
+    if(wrong){inst=junkInst();if(src===null){src=fe.src==='ucode'?'opc':fe.src;width=src==='opc'?9:CFG.decW}}
+    else{
+      inst=peek();const line=Math.floor(inst.pc/64);
+      if(src===null||line!==fe.curLine){
+        const r=lineCheck(line,inst.pc,c);
+        if(r.stall){if(n===0){fe.stallUntil=c+r.stall;fe.reason=r.reason;fe.state='stall'}break}
+        if(src!==null&&r.src!==src)break;
+        if(src===null){src=r.src;width=src==='opc'?9:CFG.decW}
+        fe.curLine=line;
+      }
+      fe.peek=null;
+    }
+    const op=pushOp(inst,src,src==='opc'?4:7,wrong,c);n++;space--;
+    if(!wrong&&inst.ucode){fe.ucodeLeft=inst.ucode-1;fe.ucodeTotal=inst.ucode;fe.ucodePC=inst.pc;fe.ucodeName=inst.asm;fe.stallUntil=c+2;fe.reason='MSROMへ切替';V.ucode();break}
+    if(op.type==='br'&&!wrong){
+      const r=branchFetch(op,inst,c);
+      if(r.misp){fe.wrongPath=true;fe.wpPC=inst.pc+0x40}
+      if(r.bubble){fe.stallUntil=c+1+r.bubble;fe.reason=r.reason;break}
+      if(r.taken&&src!=='opc')break;
+    }
+  }
+  if(n>0){fe.src=src;fe.state=fe.wrongPath?'wrong':src}
+}
+function schedFor(cls){let best=-1,bo=1e9;for(let k=0;k<6;k++){if(!SCHED_CAPS[k].has(cls))continue;const o=SIM.intS[k].length;if(o<IS_CAP&&o<bo){bo=o;best=k}}return best}
+function dispatchStage(c){
+  let n=0,nw=0,reason='';
+  while(n<8){
+    const op=SIM.fePipe[0];
+    if(!op||op.arrive>c){reason='FE';break}
+    if(SIM.rob.length>=ROB_CAP){reason='ROB満杯';break}
+    if(op.type==='ld'&&SIM.lq>=LQ_CAP){reason='Load Queue満杯';break}
+    if(op.type==='st'&&SIM.sq>=SQ_CAP){reason='Store Queue満杯';break}
+    const cls=CLS[op.type];let sk=-1;
+    if(cls==='elim'){}
+    else if(FPC.has(op.type)){if(SIM.nsq.length>=NSQ_CAP){reason='NSQ満杯';break}}
+    else{sk=schedFor(cls);if(sk<0){reason=`Int Scheduler満杯 · ${TNAME[op.type]}待ち`;break}}
+    SIM.fePipe.shift();op.tD=c;op.slot=SIM.robTail;SIM.robTail=(SIM.robTail+1)%ROB_CAP;SIM.rob.push(op);
+    if(op.type==='ld')SIM.lq++;
+    if(op.type==='st'){SIM.sq++;SIM.sqList.push(op)}
+    if(cls==='elim'){op.done=true;op.doneCycle=c;op.tI=c;op.tC=c;SIM.stats.elim++}
+    else if(FPC.has(op.type))SIM.nsq.push(op);
+    else{op.sk=sk;SIM.intS[sk].push(op)}
+    V.dispatch(op,sk);
+    n++;if(op.wrong)nw++;
+  }
+  const T=SIM.td,empty=8-n,row=new Uint8Array(8);let i=0;
+  for(;i<n-nw;i++)row[i]=0;for(;i<n;i++)row[i]=1;
+  let code=3;
+  if(empty){if(reason==='FE'){code=(c<SIM.fe.recoverUntil||SIM.fe.wrongPath)?1:2}else code=3}
+  for(;i<8;i++)row[i]=code;
+  T.ret+=n-nw;T.bad+=nw+(code===1?empty:0);if(code===2)T.fe+=empty;if(code===3&&empty)T.be+=empty;
+  if(reason==='ROB満杯'&&SIM.dispReason!=='ROB満杯'&&CFG.bk.rob&&V.enabled)SIM.brk='ROB満杯でディスパッチ停止';
+  SIM.slotHist.push(row);if(SIM.slotHist.length>160)SIM.slotHist.shift();
+  SIM.dispReason=empty?reason:'';
+}
+function nsqStage(c){
+  let m=0;
+  while(m<6&&SIM.nsq.length){
+    const op=SIM.nsq[0];const cls=CLS[op.type];let best=-1,bo=1e9;
+    for(let k=0;k<3;k++){if(!FS_CAPS[k].has(cls))continue;const o=SIM.fpS[k].length;if(o<FS_CAP&&o<bo){bo=o;best=k}}
+    if(best<0)break;SIM.nsq.shift();op.fk=best;SIM.fpS[best].push(op);V.nsq(op,best);m++;
+  }
+}
+function olderStore(op){
+  let s=null;const a=Math.floor(op.addr/8);
+  for(const st of SIM.sqList){if(st.id>=op.id)break;if(Math.floor(st.addr/8)===a)s=st}
+  return s;
+}
+function ready(op,c){
+  if(op.tD>=c)return false;
+  if(op.deps)for(const d of op.deps){if(!d.flushed&&!(d.done&&d.doneCycle<=c))return false}
+  if(op.type==='ld'&&!op.wrong){
+    const s=olderStore(op);op.fwd=null;
+    if(s){if(op.ff){op.ffWait=true;return false}else if(!s.addrKnown)return false;else op.fwd=s}
+  }
+  return true;
+}
+function execute(op,u,c,isFp){
+  op.tI=c;let lat=LATS[op.type]||1;
+  if(op.type==='ld'){
+    if(op.fwd){lat=1+6;op.lvl='STLF';SIM.stats.stlf++;V.stlf(op)}
+    else{const r=memAccess(op.addr,c+1,op);lat=1+r.lat;op.lvl=r.lvl;if(op.ffWait){lat+=22;op.lvl='L1+転送失敗'}}
+    if(!op.wrong){SIM.stats.ldN++;SIM.stats.ldLat+=lat}
+  }
+  if(op.type==='st')op.addrKnown=true;
+  op.doneCycle=c+lat;op.uid=u.id;SIM.exec.push(op);
+  if(isFp){SIM.fBusy[u.i]=c+1;SIM.fHit[u.i]=1}
+  else{SIM.uBusy[u.i]=op.type==='div'?c+lat:c+1;SIM.uHit[u.i]=1}
+  V.issue(op,u,isFp);
+}
+function issueStage(c){
+  let ld=4,st=2;
+  for(let k=0;k<6;k++){const q=SIM.intS[k];if(!q.length)continue;
+    for(const u of SCHED_UNITS[k]){if(SIM.uBusy[u.i]>c)continue;
+      for(let j=0;j<q.length;j++){const op=q[j];if(!u.caps.includes(CLS[op.type]))continue;
+        if(op.type==='ld'&&ld<(op.w>=512?2:1))continue;if(op.type==='st'&&st<1)continue;
+        if(!ready(op,c))continue;
+        if(op.type==='ld')ld-=op.w>=512?2:1;if(op.type==='st')st--;
+        q.splice(j,1);execute(op,u,c,false);break}}}
+  for(let k=0;k<3;k++){const q=SIM.fpS[k];if(!q.length)continue;
+    for(const u of FS_UNITS[k]){if(SIM.fBusy[u.i]>c)continue;
+      for(let j=0;j<q.length;j++){const op=q[j];if(!u.caps.includes(CLS[op.type]))continue;if(!ready(op,c))continue;
+        q.splice(j,1);execute(op,u,c,true);break}}}
+}
+function completeStage(c){
+  let misp=null;
+  for(let i=SIM.exec.length-1;i>=0;i--){const op=SIM.exec[i];
+    if(op.doneCycle<=c){op.done=true;op.tC=op.doneCycle;SIM.exec.splice(i,1);
+      if(op.mispredict&&!op.wrong&&(!misp||op.id<misp.id))misp=op}}
+  if(misp)flush(misp,c,'misp');
+}
+function retireStage(c){
+  let n=0,ni=0;
+  while(n<8&&SIM.rob.length){const op=SIM.rob[0];if(!op.done||op.doneCycle>=c)break;
+    SIM.rob.shift();op.tR=c;n++;
+    if(op.type==='ld')SIM.lq--;
+    if(op.type==='st'){SIM.sq--;const i=SIM.sqList.indexOf(op);if(i>=0)SIM.sqList.splice(i,1);storeCommit(op,c)}
+    if(op.first){SIM.stats.inst++;ni++}SIM.stats.uops++;op.deps=null;V.retire(op)}
+  SIM.retHist[c&255]=ni;
+}
+function storeCommit(op,c){
+  const line=Math.floor(op.addr/64);
+  if(!L1D.lookup(line,false)){fromBelow(line,c);L1D.fill(line)}
+  V.storeCommit(op);
+}
+function flush(br,c,why){
+  const idx=SIM.rob.indexOf(br);const younger=idx>=0?SIM.rob.splice(idx+1):[];
+  let n=0;const kill=op=>{op.flushed=true;op.tX=c;n++;if(op.tD>=0){if(op.type==='ld')SIM.lq--;if(op.type==='st')SIM.sq--}};
+  younger.forEach(kill);SIM.fePipe.forEach(kill);const fpk=SIM.fePipe.length;SIM.fePipe=[];
+  const alive=o=>!o.flushed;
+  SIM.intS=SIM.intS.map(q=>q.filter(alive));SIM.fpS=SIM.fpS.map(q=>q.filter(alive));SIM.nsq=SIM.nsq.filter(alive);
+  SIM.exec=SIM.exec.filter(alive);SIM.sqList=SIM.sqList.filter(alive);
+  if(idx>=0)SIM.robTail=(br.slot+1)%ROB_CAP;
+  const fe=SIM.fe;fe.wrongPath=false;fe.ucodeLeft=0;fe.stallUntil=c+3;fe.reason='リダイレクト';fe.recoverUntil=c+11;fe.curLine=-1;fe.state='stall';
+  SIM.stats.flushes++;SIM.stats.flushedOps+=n;
+  V.flush(br,younger,n,why);
+  if(why==='misp'&&CFG.bk.misp&&V.enabled)SIM.brk=`分岐予測ミス · ${br.asm}`;
+  if(why==='misp')logEv('BR',`予測ミス ${br.asm} @${hx(br.pc)} · ${n} ops破棄`,'#e5484d',true);
+}
+function nuke(){const c=SIM.cycle;if(SIM.rob.length){const head=SIM.rob[0];flush(head,c,'nuke')}else{SIM.fePipe.forEach(o=>o.flushed=true);SIM.fePipe=[]}
+  SIM.fe.stallUntil=c+20;SIM.fe.reason='例外処理からの再フェッチ';SIM.fe.recoverUntil=c+28;logEv('SYS','パイプライン全消去 · 例外や割り込みの再現','#7c5cf6',true)}
+function clearPipe(){const c=SIM.cycle;const all=[...SIM.rob,...SIM.fePipe];all.forEach(o=>{o.flushed=true;o.tX=c});
+  SIM.rob=[];SIM.fePipe=[];SIM.intS=SIM.intS.map(()=>[]);SIM.fpS=SIM.fpS.map(()=>[]);SIM.nsq=[];SIM.exec=[];SIM.sqList=[];SIM.lq=0;SIM.sq=0;
+  const fe=SIM.fe;fe.wrongPath=false;fe.ucodeLeft=0;fe.stallUntil=c+3;fe.reason='条件変更で再フェッチ';fe.recoverUntil=c+10;fe.curLine=-1;
+  all.forEach((o,k)=>{if(o.slot>=0)V.flashSlots.push({s:o.slot,t:NOW+k*.003})});if(V.enabled)V.ring(BLK.rob.top,'#4f6bf5',10,1)}
+function cleanup(c){
+  let a=0,b=0;
+  for(const [k,v] of SIM.inflight){if(v.ready<=c-2){SIM.inflight.delete(k);continue}if(v.ready>c){if(v.lvl==='L3'||v.lvl==='DRAM')a++;if(v.lvl==='DRAM')b++}}
+  SIM.mab2=Math.min(L2MAB_CAP,a);SIM.mab3=Math.min(L3MAB_CAP,b);
+}
+function step(){
+  const c=++SIM.cycle;
+  SIM.uHit.fill(0);SIM.fHit.fill(0);
+  completeStage(c);retireStage(c);issueStage(c);nsqStage(c);dispatchStage(c);fetchStage(c);
+  for(let i=0;i<12;i++)SIM.uUtil[i]=SIM.uUtil[i]*0.97+SIM.uHit[i]*0.03;
+  for(let i=0;i<6;i++)SIM.fUtil[i]=SIM.fUtil[i]*0.97+SIM.fHit[i]*0.03;
+  const T=SIM.td,E=SIM.tdE;for(const k in T){E[k]=E[k]*0.97+T[k]*0.03;T[k]=0}
+  if((c&7)===0)cleanup(c);
+}
+
+/* ============================================================
+   6. scenarios · program generators
+   ============================================================ */
+const T=(op,asm,o={})=>({op,asm,...o});
+const seqA=(base,size,step)=>{let k=0;return()=>base+((k++*step)%size)};
+const ev=v=>typeof v==='function'?v():v;
+function loopGen(body,codeBytes){
+  let i=0,iter=0;
+  return{next(){
+    const t=body[i];const bytes=codeBytes?codeBytes():body.length*4;
+    const blocks=Math.max(1,Math.floor(bytes/(body.length*4)));const blk=iter%blocks;
+    const inst={type:ev(t.op),asm:ev(t.asm),pc:0x401000+(blk*body.length+i)*4,r:ev(t.r),wr:ev(t.wr),w:t.w};
+    if(t.mem)inst.addr=t.mem();
+    if(inst.type==='br'){inst.brKind=t.kind||'cond';inst.taken=t.br?t.br():true;if(t.ret)inst.ret=t.ret()}
+    if(t.ucode)inst.ucode=ev(t.ucode);
+    if(t.ff)inst.ff=t.ff();
+    i++;if(i>=body.length){i=0;iter++}
+    return inst}};
+}
+const FP_OPTS=[[32*1024,'32KB · L1Dに収まる'],[512*1024,'512KB · L2に収まる'],[8<<20,'8MB · L3に収まる'],[256<<20,'256MB · DRAM行き']];
+const CODE_OPTS=[[16*1024,'16KB · Op Cacheに収まる'],[96*1024,'96KB · L2から供給'],[768*1024,'768KB · L2ぎりぎり'],[4<<20,'4MB · L3から供給']];
+function deepSeq(D){
+  const s=[],base=0x500000;
+  s.push({type:'alu',asm:'xor edi, edi',pc:0x401000,wr:'rdi'});
+  s.push({type:'br',brKind:'call',asm:'call f0',pc:0x401004,taken:true});
+  for(let d=0;d<D;d++){const f=base+d*0x40;
+    s.push({type:'st',asm:`push rbp · f${d}`,pc:f,addr:0x7ff00000-d*16});
+    s.push({type:'mov',asm:'mov rbp, rsp',pc:f+4});
+    s.push({type:'alu',asm:'add rdi, 1',pc:f+8,r:'rdi',wr:'rdi'});
+    if(d<D-1)s.push({type:'br',brKind:'call',asm:`call f${d+1}`,pc:f+12,taken:true});}
+  for(let d=D-1;d>=0;d--){const f=base+d*0x40;const ret=d===0?0x401008:base+(d-1)*0x40+16;
+    s.push({type:'alu',asm:'add rax, rdi',pc:f+16,r:'rax',wr:'rax'});
+    s.push({type:'ld',asm:`pop rbp · f${d}`,pc:f+20,addr:0x7ff00000-d*16});
+    s.push({type:'br',brKind:'ret',asm:`ret · f${d}`,pc:f+24,taken:true,ret});}
+  s.push({type:'br',brKind:'jmp',asm:'jmp main',pc:0x401008,taken:true});
+  return s;
+}
+const SCN=[
+{id:'steady',name:'定常状態の整数ループ',tags:['FE','EXEC'],speed:5,warm:4000,cam:'overview',
+ desc:'小さなループがOp Cacheに収まり、分岐も毎回同じ方向に進む、最も素直な状態。Op Cacheが1サイクルに最大9個のmicro-opを供給し、8-wideのRename/Dispatchがほぼ毎サイクル埋まる。',
+ watch:['右上のFEインジケータがOP CACHEに点灯し続け、デコーダは光らない','xor r8d, r8dとmov r12, r11はRenameで銀色に弾けて消え、スケジューラに入らない','ROB上面のセルが青から緑に変わり、8個ずつ順番に消えていく','Top-downのRetiringが大半を占める'],
+ params:[],
+ build(P){const a=seqA(0x10000000,8192,8);return loopGen([
+  T('ld','mov rcx, [rsi+rdx*8]',{mem:a,r:'rdx',wr:'rcx'}),T('alu','add rax, rcx',{r:['rax','rcx'],wr:'rax'}),T('mul','imul rbx, r14, 3',{wr:'rbx'}),
+  T('zero','xor r8d, r8d',{wr:'r8'}),T('alu','add r9, r10',{wr:'r9'}),T('alu','lea r11, [r9+r10]',{r:'r9',wr:'r11'}),T('mov','mov r12, r11',{r:'r11',wr:'r12'}),
+  T('alu','sub r13, 1',{r:'r13',wr:'r13'}),T('alu','inc rdx',{r:'rdx',wr:'rdx'}),T('alu','cmp rdx, rdi',{r:'rdx',wr:'fl'}),T('br','jne .loop',{r:'fl'})])}},
+{id:'cold',name:'コールドスタート',tags:['FE','MEM'],speed:30,warm:0,cold:true,cam:'frontend',prewarm(){const b=Math.floor(0x401000/64);for(let i=0;i<192;i++)L3.fill(b+i);for(let i=0;i<65536;i++){L3.fill(Math.floor(0x30000000/64)+i);L3.fill(Math.floor(0x38000000/64)+i)}},
+ desc:'L1、L2、TLB、BTB、Op Cache、分岐予測器を空にし、L3にだけコードとデータが残っている状態から、12KBのコードと4MBのデータを処理し始める。別のプロセスから切り替わった直後に近い。時間とともに各構造が温まり、IPCが立ち上がる。',
+ watch:['L1Iミスでフロントエンドが止まり、L3から命令ラインの立方体が届く。次の3ラインも同時に取り込む','FEインジケータが最初はDECODEで、2周目からOP CACHEに切り替わる','初回の分岐はBTBミスになり、小さなバブルが入る','右のHit Ratesのゲージが0付近から上がっていく'],
+ params:[],
+ build(P){const a=seqA(0x30000000,4<<20,8),s=seqA(0x38000000,4<<20,8);return loopGen([
+  T('ld','mov rax, [rsi]',{mem:a,wr:'rax'}),T('alu','add rbx, rax',{r:'rax',wr:'rbx'}),T('alu','shr rax, 3',{r:'rax',wr:'rax'}),T('st','mov [rdi], rbx',{mem:s,r:'rbx'}),
+  T('alu','add rsi, 8',{r:'rsi',wr:'rsi'}),T('mul','imul rcx, rax',{r:'rax',wr:'rcx'}),T('alu','xor rdx, rcx',{r:'rcx',wr:'rdx'}),T('ld','mov r8, [rsi+8]',{mem:a,wr:'r8'}),
+  T('alu','add r9, r8',{r:'r8',wr:'r9'}),T('alu','or r10, r9',{r:'r9',wr:'r10'}),T('zero','xor r11d, r11d',{wr:'r11'}),T('alu','add rdi, 8',{r:'rdi',wr:'rdi'}),
+  T('mov','mov r12, r10',{r:'r10',wr:'r12'}),T('alu','sub r13, 1',{r:'r13',wr:'r13'}),T('alu','cmp r13, r14',{r:'r13',wr:'fl'}),T('br','jne .next_block',{r:'fl'})],()=>12*1024)}},
+{id:'randbr',name:'予測不能な分岐',tags:['BR'],speed:5,warm:2000,cam:'exec',
+ desc:'ソートしていない配列の値で分岐する、よく知られた最悪ケース。分岐方向が乱数で決まるので、どの予測器も約半分を外す。外れた分岐の後ろで投機実行した命令は、分岐が実行ユニットで解決した時点で全て捨てられる。',
+ watch:['赤いリングが分岐ユニットから広がり、ROBの若いエントリが一斉に赤く光って消える','灰色の粒子が間違ったパスの命令。予測ミスが判明するまで普通に実行される','Top-downのBad Speculationが大きくなる','スライダーを90%以上にすると予測が当たり始め、IPCが回復する'],
+ params:[{k:'bias',label:'jbが成立する確率',min:50,max:100,step:1,v:50,unit:'%'}],
+ build(P){const a=seqA(0x40000000,1<<16,1);return loopGen([
+  T('ld','movzx eax, byte [rsi+rcx]',{mem:a,r:'rcx',wr:'rax'}),T('alu','cmp eax, 128',{r:'rax',wr:'fl'}),T('br','jb .skip',{r:'fl',br:()=>rng()*100<P.bias}),
+  T('alu','add rbx, rax',{r:['rbx','rax'],wr:'rbx'}),T('alu','add rcx, 1',{r:'rcx',wr:'rcx'}),T('alu','cmp rcx, rdx',{r:'rcx',wr:'fl2'}),T('br','jne .loop',{r:'fl2'})])}},
+{id:'loop',name:'ループ出口を学習する',tags:['BR'],speed:12,warm:1500,bpCold:true,cam:'bp',
+ desc:'回数が固定の内側ループで、終了時の1回だけ分岐方向が変わる。グローバル履歴が周期全体を覚えられる長さなら、予測器は出口も当てるようになる。このモデルのTAGEは最長97ビットの履歴を使うので、回数が98回までなら出口も当たり、99回以上では出口で毎回外れる。予測が外れるたびに、1段長い履歴のテーブルへエントリを割り当てていく。',
+ watch:['Branch Predictor LabのGHRに、Takenの連続とNot-takenが周期的に並ぶ','予測ミスのたびに、より長い履歴のテーブルに緑のセルが割り当てられる','学習が終わると、出口の予測をどのテーブルが担当しているかが予測ログの提供元に出る','回数を99以上にするとMPKIが下がらなくなる'],
+ params:[{k:'trip',label:'内側ループの回数',min:2,max:128,step:1,v:20,unit:'回'}],
+ build(P){const a=seqA(0x48000000,16384,8);let k=0;return loopGen([
+  T('ld','mov rax, [rsi+rcx*8]',{mem:a,wr:'rax'}),T('alu','add rbx, rax',{r:['rbx','rax'],wr:'rbx'}),T('alu','add rcx, 1',{r:'rcx',wr:'rcx'}),
+  T('alu','dec r8',{r:'r8',wr:'r8'}),T('br','jnz .inner',{r:'r8',br:()=>{k++;return k%P.trip!==0}})])}},
+{id:'deep',name:'深いコールチェーンとReturn Stack',tags:['BR','FE'],speed:8,warm:1500,bpCold:true,cam:'bp',
+ desc:'関数が別の関数を次々に呼ぶ深い呼び出しチェーン。Return Stackは64エントリなので、64段を超えると古い戻り先が上書きされる。巻き戻すとき、上書きされた段のretが予測ミスになる。',
+ watch:['Branch Predictor LabのRAS列が下から埋まり、64段で一周して上書きされる','巻き戻しの後半でretが赤いリングを出す','段数を64以下にすると、retの予測ミスが消える'],
+ params:[{k:'depth',label:'呼び出しの段数',min:8,max:160,step:4,v:100,unit:'段'}],
+ build(P){let q=[];return{next(){if(!q.length)q=deepSeq(P.depth);return q.shift()}}}},
+{id:'stream',name:'配列ストリーミングとプリフェッチ',tags:['MEM'],speed:14,warm:3000,cam:'memory',
+ desc:'256MBの配列を先頭から順に読む。ハードウェアプリフェッチャはストライドを検出すると、要求より先にラインをDRAMから運び始める。グローバル設定でプリフェッチャを切ると、新しいラインに入るたびにDRAMへの要求が出る。ROBに入る範囲の要求しか同時に待てないので、ROBが満杯になって止まる。',
+ watch:['水色の立方体がプリフェッチで、DRAMからL3、L2、L1Dへ流れていく','Cache MapのL1Dタブで、セルが左から右へ順に水色に光る','プリフェッチをOFFにすると、ROBが満杯になりIPCが半分以下に下がる','DRAM帯域を1ライン3サイクルと仮定しているので、プリフェッチがあっても帯域で頭打ちになる'],
+ params:[],
+ build(P){const a=seqA(0x50000000,256<<20,8);return loopGen([
+  T('ld','mov rax, [rsi+rcx*8]',{mem:a,r:'rcx',wr:'rax'}),T('alu','add rbx, rax',{r:['rbx','rax'],wr:'rbx'}),T('ld','mov rdx, [rsi+rcx*8+8]',{mem:a,r:'rcx',wr:'rdx'}),
+  T('alu','add r9, rdx',{r:['r9','rdx'],wr:'r9'}),T('alu','add rcx, 2',{r:'rcx',wr:'rcx'}),T('alu','cmp rcx, r10',{r:'rcx',wr:'fl'}),T('br','jne .loop',{r:'fl'})])}},
+{id:'chase',name:'ポインタチェイスとメモリの壁',tags:['MEM'],speed:40,warm:300,cam:'memory',prewarm(P){const sz=FP_OPTS[P.fp][0];if(sz>(64<<20))return;const b=0x60000000/64,n=sz/64;for(let i=0;i<n;i++){L3.fill(b+i);if(sz<=(1<<20))L2.fill(b+i);if(sz<=48*1024)L1D.fill(b+i)}},
+ desc:'連結リストを辿るmov rax, [rax]は、前のロードの結果が次のアドレスになる。ロード同士が完全に直列なので、アウトオブオーダー実行でもレイテンシを隠せない。後続の独立した命令がROBを埋め尽くし、ROB満杯でディスパッチが止まる。',
+ watch:['ROBの先頭ポインタが止まり、上面のセルが端まで埋まる','右上のボトルネック表示が「ROB満杯」になり、先頭命令の残りサイクルが減っていく','フットプリントを切り替えると、L1D、L2、L3、DRAMそれぞれのレイテンシの差が見える','L2とL3のMAB上のLEDは、直列のため1つずつしか点かない'],
+ params:[{k:'fp',label:'リストが散らばる範囲',min:0,max:3,step:1,v:3,opts:FP_OPTS}],
+ build(P){return loopGen([
+  T('ld','mov rax, [rax]',{mem:()=>0x60000000+Math.floor(rng()*(FP_OPTS[P.fp][0]/64))*64,r:'rax',wr:'rax'}),
+  T('alu','add r8, 1',{r:'r8',wr:'r8'}),T('alu','xor r9, r12'),T('mul','imul r10, r13'),T('alu','add r11, r14'),T('alu','sub r15, rdi'),
+  T('alu','or rsi, rdx'),T('alu','and rbx, rcx'),T('alu','add rbp, 8'),T('alu','shl rdx, 1'),T('alu','lea rcx, [rcx+1]'),
+  T('alu','test rax, rax',{r:'rax',wr:'fl'}),T('br','jnz .next',{r:'fl'})])}},
+{id:'conflict',name:'キャッシュのセット競合',tags:['MEM'],speed:6,warm:3000,cam:'memory',
+ desc:'4096バイト間隔に置いたノードを、連結リストのように1本ずつ辿る。4096バイト間隔のアドレスはL1Dの64セットのうち同じセットに入り、L1Dは12-wayなので、13本目のラインが来ると最も古いラインが追い出される。合計サイズは1KB程度なのに、毎回L2まで取りに行く。ロードが直列なので、L1Dの4サイクルとL2の14サイクルの差がそのままIPCに出る。',
+ watch:['Cache MapのL1Dタブで、1列だけが赤と橙に点滅し続ける','12本と13本を行き来すると、L1Dのヒット率が100%と0%の間で切り替わり、IPCも大きく変わる','L2から水色の立方体が繰り返し届く'],
+ params:[{k:'n',label:'同じセットに入るライン数',min:4,max:32,step:1,v:16,unit:'本'}],
+ build(P){let k=0;const ad=()=>0x70000000+((k++)%P.n)*4096;return loopGen([
+  T('ld','mov rax, [rax]',{mem:ad,r:'rax',wr:'rax'}),T('alu','add rbx, rax',{r:['rbx','rax'],wr:'rbx'}),T('ld','mov rax, [rax]',{mem:ad,r:'rax',wr:'rax'}),
+  T('alu','add r8, rax',{r:['r8','rax'],wr:'r8'}),T('alu','add rdi, 8'),T('alu','dec rcx',{r:'rcx',wr:'rcx'}),T('br','jnz .loop',{r:'rcx'})])}},
+{id:'avx',name:'AVX-512 FMAスループット',tags:['EXEC'],speed:6,warm:3000,cam:'fp',
+ desc:'512ビットのFMAで内積を計算する。FMAのレイテンシは4サイクル、FMAパイプは2本なので、パイプを埋め続けるには独立したアキュムレータが8本必要になる。アキュムレータを1本にすると、各FMAが前のFMAの結果を待ち、レイテンシで律速する。',
+ watch:['FMAユニット2本が毎サイクル跳ねる','アキュムレータを減らすと、FP Schedulerのセルが待ち状態で埋まっていく','512ビットロードは1サイクル2本まで。L1Dからの緑の粒子の流れを見る','Execution PortsのFMA列の稼働率'],
+ params:[{k:'acc',label:'独立したアキュムレータの本数',min:1,max:8,step:1,v:8,unit:'本'}],
+ build(P){const a=seqA(0x78000000,32768,64);const b=[T('ld','vmovups zmm16, [rsi]',{mem:a,w:512,wr:'z16'}),T('ld','vmovups zmm17, [rsi+64]',{mem:a,w:512,wr:'z17'})];
+  for(let i=0;i<8;i++)b.push(T('fma',()=>`vfmadd231ps zmm${i%P.acc}, zmm16, zmm17`,{r:()=>['acc'+(i%P.acc),'z16','z17'],wr:()=>'acc'+(i%P.acc)}));
+  b.push(T('alu','add rsi, 128',{r:'rsi',wr:'rsi'}),T('alu','dec rcx',{r:'rcx',wr:'rcx'}),T('br','jnz .loop',{r:'rcx'}));return loopGen(b)}},
+{id:'div',name:'整数除算のボトルネック',tags:['EXEC'],speed:8,warm:2000,cam:'exec',
+ desc:'64ビット整数除算は、パイプライン化されていない除算器を1つだけ使う。このモデルでは除算器が14サイクルの間、次の除算を受け付けない。除算が多いと除算器を持つInt Scheduler 4だけが満杯になり、他のスケジューラが空いていてもディスパッチが止まる。',
+ watch:['ALU·DIVユニットだけが長く光り続ける','Int Scheduler 4のセルが紫の除算命令で埋まる','ボトルネック表示が「Int Scheduler満杯 · DIV待ち」になる','除算を0にするとIPCが跳ね上がる'],
+ params:[{k:'divs',label:'1周あたりの除算命令',min:0,max:3,step:1,v:1,unit:'個'}],
+ build(P){const a=seqA(0x7c000000,8192,8);return loopGen([
+  T('ld','mov rax, [rsi]',{mem:a,r:'rsi',wr:'rax'}),T(()=>P.divs>=1?'div':'alu',()=>P.divs>=1?'div rcx':'add r8, rax',{r:'rax',wr:'q1'}),
+  T('alu','add rbx, rax',{r:'rax',wr:'rbx'}),T('alu','xor r9, r10'),T(()=>P.divs>=2?'div':'alu',()=>P.divs>=2?'div r11':'sub r12, 1',{r:'q1',wr:'q2'}),
+  T('alu','add r13, rdx'),T('alu','add rsi, 8',{r:'rsi',wr:'rsi'}),T(()=>P.divs>=3?'div':'alu',()=>P.divs>=3?'div r14':'or r15, r8',{r:'q2',wr:'q3'}),
+  T('alu','cmp rsi, rdi',{r:'rsi',wr:'fl'}),T('br','jne .loop',{r:'fl'})])}},
+{id:'stlf',name:'ストアからロードへの転送',tags:['MEM','EXEC'],speed:6,warm:2000,cam:'lsu',
+ desc:'スタックに書いた値をすぐ読み戻す、関数呼び出しやレジスタ退避でよく出るパターン。ロードの時点でデータはまだL1Dに書かれていないので、ロードはStore Queueから値を直接受け取る。サイズやアライメントが合わないと転送できず、ストアの退役とL1Dへの書き込みを待つことになる。',
+ watch:['Store QueueからLoad Queueへ橙の弧が飛ぶ','転送失敗をONにすると、ロードがストアの退役を待ってからL1Dを読む','このモデルはスタックのメモリ名前変更を扱わず、通常の転送だけを再現する'],
+ params:[{k:'mis',label:'転送失敗 · 0で整列、1で4バイトずれ',min:0,max:1,step:1,v:0,unit:''}],
+ build(P){return loopGen([
+  T('st','mov [rsp+8], rax',{mem:()=>0x7ffe0008,r:'rax'}),T('ld',()=>P.mis?'mov ebx, [rsp+12]':'mov rbx, [rsp+8]',{mem:()=>P.mis?0x7ffe000c:0x7ffe0008,wr:'rbx',ff:()=>P.mis===1}),
+  T('alu','add rax, rbx',{r:['rax','rbx'],wr:'rax'}),T('alu','add rcx, 1',{r:'rcx',wr:'rcx'}),T('alu','cmp rcx, rdx',{r:'rcx',wr:'fl'}),T('br','jne .loop',{r:'fl'})])}},
+{id:'elim',name:'ゼロイディオムとMove Elimination',tags:['FE','EXEC'],speed:5,warm:3000,cam:'rename',
+ desc:'xor eax, eaxやmov rbx, raxは、Renameの段階でレジスタの対応表を書き換えるだけで完了する。実行ユニットを使わず、スケジューラにも入らない。依存関係を断ち切る効果もある。',
+ watch:['Renameで銀色の粒子が弾け、そのままROBの緑のセルになる','Int Schedulerのセルがほとんど空のまま','IPCはディスパッチ幅の8に近づく'],
+ params:[],
+ build(P){return loopGen([
+  T('zero','xor eax, eax',{wr:'rax'}),T('mov','mov rbx, rax',{r:'rax',wr:'rbx'}),T('zero','xor ecx, ecx',{wr:'rcx'}),T('mov','mov rdx, rcx',{r:'rcx',wr:'rdx'}),
+  T('alu','add rsi, 1',{r:'rsi',wr:'rsi'}),T('mov','mov r8, rsi',{r:'rsi',wr:'r8'}),T('zero','vpxor xmm0, xmm0, xmm0',{wr:'x0'}),T('mov','mov r9, r8',{r:'r8',wr:'r9'}),
+  T('alu','cmp rsi, rdi',{r:'rsi',wr:'fl'}),T('br','jne .loop',{r:'fl'})])}},
+{id:'ucode',name:'マイクロコード命令',tags:['FE'],speed:6,warm:2000,cam:'frontend',
+ desc:'rep movsbやcpuidのような複雑な命令は、デコーダではなくMicrocode ROMから一連のmicro-opとして供給される。このモデルでは、その間の供給が1サイクル4個に落ち、MSROMへの切り替えと復帰にも2サイクルずつバブルが入る。',
+ watch:['μcodeブロックから水色の粒子が連続して出る','FEインジケータがMSROMに切り替わる','1命令あたりのmicro-op数を増やすほどIPCが下がる'],
+ params:[{k:'n',label:'1命令あたりのmicro-op数',min:8,max:64,step:4,v:24,unit:'個'}],
+ build(P){return loopGen([
+  T('alu','add rax, 1',{r:'rax',wr:'rax'}),T('alu','add rbx, rax',{r:'rax',wr:'rbx'}),T('alu','xor rcx, rdx'),T('alu','sub r8, 3'),
+  T('alu','rep movsb',{ucode:()=>P.n}),T('alu','add r9, r10'),T('alu','cmp rax, rdi',{r:'rax',wr:'fl'}),T('br','jne .loop',{r:'fl'})])}},
+{id:'bigcode',name:'巨大なコードフットプリント',tags:['FE'],speed:10,warm:6000,cam:'frontend',prewarm(P){const n=CODE_OPTS[P.code][0]/64,b=Math.floor(0x401000/64);for(let i=0;i<n;i++){L3.fill(b+i);if(i>=n-16384)L2.fill(b+i)}},
+ desc:'大きなサーバアプリケーションやJITコードのように、1周で触るコードが大きい場合。Op Cacheに収まらないとデコード経路に落ち、L1Iにも収まらないと命令フェッチがL2やL3を待つ。分岐の数がBTBの容量を超えるとBTBミスも出る。このモデルは命令側のプリフェッチを省略している。',
+ watch:['FEインジケータがDECODEとSTALLを行き来する','L2やL3から命令ラインの立方体がL1Iへ届き続ける','Top-downのFrontend Boundが大きくなる','16KBにするとOp Cacheに収まり、一気に速くなる'],
+ params:[{k:'code',label:'1周で触るコードの量',min:0,max:3,step:1,v:2,opts:CODE_OPTS}],
+ build(P){const a=seqA(0x7d000000,8192,8);return loopGen([
+  T('ld','mov rax, [rsi]',{mem:a,wr:'rax'}),T('alu','add rbx, rax',{r:'rax',wr:'rbx'}),T('alu','shl rbx, 2',{r:'rbx',wr:'rbx'}),T('alu','xor rcx, rbx',{r:'rbx',wr:'rcx'}),
+  T('alu','add rdx, 7'),T('mul','imul r8, rcx',{r:'rcx',wr:'r8'}),T('alu','or r9, r8',{r:'r8',wr:'r9'}),T('alu','test r9, r9',{r:'r9',wr:'fl'}),
+  T('br','jz .cold_path',{r:'fl',br:()=>false}),T('alu','add r10, 1'),T('alu','sub r11, r10'),T('ld','mov r12, [rdi]',{mem:a,wr:'r12'}),
+  T('alu','add r13, r12',{r:'r12',wr:'r13'}),T('alu','lea r14, [r13+8]',{r:'r13',wr:'r14'}),T('alu','mov r15d, 1'),T('br','jmp .next_fn',{kind:'jmp'})],()=>CODE_OPTS[P.code][0])}},
+{id:'tlb',name:'TLBミスとページウォーク',tags:['MEM'],speed:10,warm:3000,cam:'lsu',prewarm(){for(let j=0;j<16384;j++){const l=Math.floor((0x40000000+j*4096+((j>>4)&63)*64)/64);L3.fill(l);L2.fill(l)}},
+ desc:'64MBの範囲に散らばった16384ページを、1ページ1ラインずつランダムに読む。データ自体は合計1MBなのでL2かL3に載るが、4KBページではDTLBの4096エントリで16MB分しか覆えず、ページウォークが頻発する。グローバル設定で2MBページに切り替えると、DTLBのミスがほぼ消える。',
+ watch:['DTLBから紫の粒子が出てページウォークに行く','Hit RatesのDTLBゲージが低い','2MBページをONにすると、DTLBのゲージが100%近くに上がる'],
+ params:[],
+ build(P){return loopGen([
+  T('ld','mov rax, [rbx+rcx*8]',{mem:()=>{const j=Math.floor(rng()*16384);return 0x40000000+j*4096+((j>>4)&63)*64},wr:'rax'}),
+  T('alu','add r8, rax',{r:['r8','rax'],wr:'r8'}),T('alu','inc rcx',{r:'rcx',wr:'rcx'}),T('alu','xor r9, r10'),T('alu','add r11, 5'),T('alu','cmp rcx, rdx',{r:'rcx',wr:'fl'}),T('br','jne .loop',{r:'fl'})])}},
+{id:'custom',name:'カスタムラボ',tags:['FE','EXEC','MEM','BR'],speed:8,warm:3000,cam:'overview',
+ desc:'命令の構成比、分岐の予測しやすさ、メモリの範囲、依存の強さを自由に組み合わせる実験場。値を確定すると実行中の命令を破棄し、新しい条件の命令からフェッチし直す。',
+ watch:['FPを増やすとNSQとFP Schedulerが動き出す','分岐の予測不能度を上げるとBad Speculationが増える','依存の割合を上げると、ROBに命令が溜まるのにIPCが下がる'],
+ params:[{k:'int',label:'整数演算',min:0,max:100,step:1,v:45,unit:''},{k:'fp',label:'浮動小数点',min:0,max:100,step:1,v:10,unit:''},{k:'ld',label:'ロード',min:0,max:100,step:1,v:25,unit:''},
+  {k:'st',label:'ストア',min:0,max:100,step:1,v:8,unit:''},{k:'br',label:'分岐',min:0,max:100,step:1,v:12,unit:''},{k:'rand',label:'分岐の予測不能度',min:0,max:100,step:1,v:10,unit:'%'},
+  {k:'mem',label:'ランダムロードの範囲',min:0,max:3,step:1,v:1,opts:FP_OPTS},{k:'dep',label:'直前の結果に依存する割合',min:0,max:100,step:1,v:30,unit:'%'}],
+ build(P){let k=0;const sa=seqA(0x90000000,64<<20,8);const A={alu:'add r{a}, r{b}',mul:'imul r{a}, r{b}',div:'div r{b}',fma:'vfmadd231pd zmm{a}, zmm{b}, zmm3',fadd:'vaddpd zmm{a}, zmm{b}, zmm2',fmul:'vmulpd zmm{a}, zmm{b}, zmm1',ld:'mov r{a}, [rsi+{o}]',st:'mov [rdi+{o}], r{b}',br:'jnz .L{o}'};
+  return{next(){const i=k%256;k++;const pc=0x402000+i*4;const tot=(P.int+P.fp+P.ld+P.st+P.br)||1;let x=rng()*tot,type;
+   if((x-=P.int)<0){const y=rng();type=y<.85?'alu':y<.97?'mul':'div'}else if((x-=P.fp)<0){const y=rng();type=y<.5?'fma':y<.8?'fadd':'fmul'}
+   else if((x-=P.ld)<0)type='ld';else if((x-=P.st)<0)type='st';else type='br';
+   const ra=8+(k%8),rb=8+((k+3)%8);
+   const inst={type,pc,asm:A[type].replace('{a}',ra).replace('{b}',rb).replace('{o}',(i*8).toString(16))};
+   if(type==='ld')inst.addr=rng()<.5?sa():0x98000000+Math.floor(rng()*(FP_OPTS[P.mem][0]/64))*64;
+   if(type==='st')inst.addr=0x9c000000+(i*8)%8192;
+   if(type==='br'){inst.brKind='cond';inst.taken=rng()*100<P.rand?rng()<.5:((i*7)%5!==0)}
+   if(rng()*100<P.dep)inst.r='@prev';inst.wr='g'+ra;return inst}}}},
+];
+
+/* ============================================================
+   7. three.js scene
+   ============================================================ */
+await Promise.race([Promise.all(['600 20px Inter','700 20px Inter','600 20px "JetBrains Mono"','500 20px "Noto Sans JP"'].map(f=>document.fonts.load(f))),new Promise(r=>setTimeout(r,2500))]).catch(()=>{});
+const vp=$('#vp');
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.domElement.className='three';vp.prepend(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#e5e9f0');scene.fog=new THREE.Fog('#e5e9f0',70,140);
+const camera=new THREE.PerspectiveCamera(36,1,0.1,400);camera.position.set(2,31,27);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.08;controls.maxPolarAngle=Math.PI*.47;controls.minDistance=3;controls.maxDistance=120;controls.target.set(1,0,1.5);controls.autoRotateSpeed=.6;
+const ENV=new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(renderer),.04).texture;
+scene.add(new THREE.HemisphereLight('#ffffff','#c9d0dc',1.15));
+const sun=new THREE.DirectionalLight('#ffffff',1.5);sun.position.set(-18,40,22);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+Object.assign(sun.shadow.camera,{left:-34,right:34,top:26,bottom:-26,near:1,far:120});sun.shadow.bias=-0.0004;sun.shadow.radius=4;scene.add(sun);
+const fill=new THREE.DirectionalLight('#dfe6ff',.35);fill.position.set(20,12,-20);scene.add(fill);
+const world=new THREE.Group();scene.add(world);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(400,400),new THREE.MeshStandardMaterial({color:'#e5e9f0',roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-.34;floor.receiveShadow=true;world.add(floor);
+
+const S=45;const W2=(px,py)=>[(px-1000)/S,(py-700)/S];
+{const [ax,az]=W2(-30,0),[bx,bz]=W2(2200,1385);const w=bx-ax,d=bz-az;
+ const sub=new THREE.Mesh(new RoundedBoxGeometry(w,.34,d,3,.12),new THREE.MeshPhysicalMaterial({color:'#e9edf3',roughness:.7,clearcoat:.2,envMap:ENV,envMapIntensity:.3}));sub.position.set(ax+w/2,-.17,az+d/2);sub.receiveShadow=true;sub.castShadow=true;world.add(sub);
+ const pads=[];const step=.75;for(let x=ax+.6;x<bx-.5;x+=step){pads.push([x,az+.28,0],[x,bz-.28,0])}for(let z=az+.9;z<bz-.8;z+=step){pads.push([ax+.28,z,1],[bx-.28,z,1])}
+ const pm=new THREE.InstancedMesh(new THREE.BoxGeometry(.38,.03,.16),new THREE.MeshStandardMaterial({color:'#e3bd62',metalness:.7,roughness:.3}),pads.length);const o=new THREE.Object3D();
+ pads.forEach(([x,z,r],i)=>{o.position.set(x,.015,z);o.rotation.y=r?Math.PI/2:0;o.updateMatrix();pm.setMatrixAt(i,o.matrix)});world.add(pm)}
+function txt(g,t,x,y,font,col,maxW){g.font=font;g.fillStyle=col;g.fillText(t,x,y,maxW)}
+function labelTex(title,sub,wu,hu,o={}){
+  const s=o.res||120;const W=Math.min(2048,Math.max(64,Math.round(wu*s))),H=Math.min(1024,Math.max(28,Math.round(hu*s)));
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');g.textAlign='center';g.textBaseline='middle';
+  const fs=Math.min(H*(sub?.34:.48),W/(Math.max(6,title.length)*.5),64);
+  const ty=o.top?H*.3:sub?H*.4:H*.52;
+  txt(g,title,W/2,ty,`700 ${fs}px Inter,"Noto Sans JP",sans-serif`,o.color||'#353c4d',W*.92);
+  if(sub)txt(g,sub,W/2,ty+fs*1.0,`600 ${fs*.7}px "JetBrains Mono",monospace`,'#6c7488',W*.92);
+  const t=new THREE.CanvasTexture(cv);t.anisotropy=8;t.colorSpace=THREE.SRGBColorSpace;return t;
+}
+function spriteLabel(text,color){
+  const cv=document.createElement('canvas');cv.width=512;cv.height=112;const g=cv.getContext('2d');
+  g.font='700 44px Inter,"Noto Sans JP",sans-serif';const tw=Math.min(480,g.measureText(text).width+56);
+  const x0=(512-tw)/2;g.fillStyle='rgba(120,130,155,.25)';rr(g,x0+4,22,tw,74,37);g.fill();
+  g.fillStyle='#f3f5f9';rr(g,x0,16,tw,74,37);g.fill();g.fillStyle=color;g.beginPath();g.arc(x0+30,53,9,0,7);g.fill();
+  g.fillStyle='#2f3646';g.textAlign='left';g.textBaseline='middle';g.fillText(text,x0+48,55,tw-62);
+  const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthTest:false,transparent:true}));sp.scale.set(4.6,1.0,1);sp.renderOrder=10;return sp;
+}
+function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
+
+// zones
+const ZONES=[[260,30,1500,650,'#fff3d4','FRONT END',300,600],[20,650,1500,1040,'#d8f5e8','EXECUTION ENGINE',70,1000],[1500,590,2150,1350,'#ebe3ff','MEMORY SUBSYSTEM',1640,1310],[585,1040,1500,1350,'#ebe3ff','',0,0]];
+for(const [x0,y0,x1,y1,col,name,lx,ly] of ZONES){
+  const [ax,az]=W2(x0,y0),[bx,bz]=W2(x1,y1);const w=bx-ax,d=bz-az;
+  const m=new THREE.Mesh(new RoundedBoxGeometry(w,.12,d,2,.06),new THREE.MeshStandardMaterial({color:col,roughness:.95}));
+  m.position.set(ax+w/2,.06,az+d/2);m.receiveShadow=true;world.add(m);
+  if(name){const tex=labelTex(name,'',8,1,{color:'#8a90a3'});const pl=new THREE.Mesh(new THREE.PlaneGeometry(8,1),new THREE.MeshBasicMaterial({map:tex,transparent:true,opacity:.75}));
+    const [px,pz]=W2(lx,ly);pl.rotation.x=-Math.PI/2;pl.position.set(px+3,.125,pz);world.add(pl)}
+}
+// blocks
+const BLK={};const PICK=[];
+function physMat(col){return new THREE.MeshPhysicalMaterial({color:col,roughness:.55,metalness:0,clearcoat:.3,clearcoatRoughness:.4,emissive:'#000000',envMap:ENV,envMapIntensity:.35})}
+function addBlock(id,title,sub,cx,cy,pw,ph,h,col,o={}){
+  const [x,z]=W2(cx,cy);const w=pw/S*.94,d=ph/S*.88;const y0=.12+(o.base||0);
+  const r=Math.min(.12,w*.18,d*.18,h*.35);
+  const b={id,title,sub,x,z,w,d,h,y0,y1:y0+h,top:new THREE.Vector3(x,y0+h,z),pulse:0,pc:new THREE.Color(),base:new THREE.Color(col),bounce:!!o.bounce,mats:[]};
+  let m;
+  if(o.slices){m=new THREE.Group();const n=o.slices,gap=Math.min(.04,h/n*.2),hs=(h-gap*(n-1))/n;b.wf=new Float32Array(n);b.wc=Array.from({length:n},()=>new THREE.Color());
+    const geo=new RoundedBoxGeometry(w,hs,d,2,Math.min(.08,hs*.45));
+    for(let i=0;i<n;i++){const mt=physMat(col);const sl=new THREE.Mesh(geo,mt);sl.position.y=-h/2+hs/2+i*(hs+gap);sl.castShadow=true;sl.receiveShadow=true;m.add(sl);PICK.push(sl);b.mats.push(mt)}}
+  else if(o.sticks){m=new THREE.Group();const mt=physMat(col),pcb=physMat('#cfe6d5');b.mats.push(mt,pcb);
+    const bs=new THREE.Mesh(new RoundedBoxGeometry(w,.14,d,2,.06),mt);bs.position.y=-h/2+.07;bs.castShadow=bs.receiveShadow=true;m.add(bs);PICK.push(bs);
+    const n=o.sticks,sw=.16,chipM=new THREE.MeshStandardMaterial({color:'#5b6474',roughness:.55}),goldM=new THREE.MeshStandardMaterial({color:'#e2b553',roughness:.35,metalness:.6});
+    const chipG=new THREE.BoxGeometry(sw*1.6,.34,d*.17);
+    for(let i=0;i<n;i++){const sx=-w/2+w*.16+i*(w*.68)/(n-1);const st=new THREE.Mesh(new RoundedBoxGeometry(sw,h-.3,d*.94,2,.03),pcb);st.position.set(sx,.08,0);st.castShadow=true;m.add(st);PICK.push(st);
+      const gd=new THREE.Mesh(new THREE.BoxGeometry(sw*1.2,.1,d*.9),goldM);gd.position.set(sx,-h/2+.2,0);m.add(gd);
+      for(let k=0;k<8;k++){const ch=new THREE.Mesh(chipG,chipM);ch.position.set(sx,-h/2+.75+Math.floor(k/4)*.62,-d*.36+(k%4)*d*.24);ch.castShadow=true;m.add(ch)}}}
+  else{const mt=physMat(col);m=new THREE.Mesh(new RoundedBoxGeometry(w,h,d,3,r),mt);m.castShadow=true;m.receiveShadow=true;PICK.push(m);b.mats.push(mt)}
+  m.position.set(x,y0+h/2,z);m.userData.id=id;world.add(m);b.mesh=m;b.mat=b.mats[0];BLK[id]=b;
+  if((o.grid||h>=1.3)&&!o.nofront){const ph2=Math.min(h*.9,w*.5);const tex=labelTex(title,sub,w,ph2,{res:160});const pl=new THREE.Mesh(new THREE.PlaneGeometry(w*.96,ph2),new THREE.MeshBasicMaterial({map:tex,transparent:true}));pl.position.set(0,o.slices?h*.2:0,d/2+.006);m.add(pl)}
+  if(!o.grid&&!o.nolabel&&h<1.3){const tex=labelTex(title,sub,w,d,{res:o.res||120});const pl=new THREE.Mesh(new THREE.PlaneGeometry(w*.95,d*.9),new THREE.MeshBasicMaterial({map:tex,transparent:true}));pl.rotation.x=-Math.PI/2;pl.position.set(0,h/2+.004,0);m.add(pl)}
+  return b;
+}
+const BDEF=[
+ ['bp','Branch Predictor','BTB 16K+8K · RAS 64',370,172,140,135,1.0,'#ffcf9e'],
+ ['fq','Fetch Queue','',531,135,90,30,.45,'#ffe2c6'],
+ ['itlb','ITLB','64 / 2048',635,145,118,46,.6,'#ffcf9e'],
+ ['l1i','L1 Instruction Cache','32 KB 8-Way',912,145,432,50,1.0,'#ffd3d6'],
+ ['iq0','Instruction Queue','',762,240,200,40,.45,'#ffd3d6'],
+ ['iq1','Instruction Queue','',1050,240,200,40,.45,'#ffd3d6'],
+ ['dec0','4-Way Decode','DEC ×4',761,330,236,60,.7,'#cdebd5'],
+ ['ucode','μcode','MSROM',905,335,48,62,.7,'#ffe2c6'],
+ ['dec1','4-Way Decode','DEC ×4',1048,330,236,60,.7,'#cdebd5'],
+ ['opc','Op Cache','6.75K 16-Way',419,370,138,60,1.0,'#ffd3d6'],
+ ['moq','Micro-Op Queue','96 entry · 仮定',908,540,365,40,.4,'#ffe2c6',{grid:1}],
+ ['ren','8-Way Rename / Dispatch','Zeroing Idioms · Move Elimination',912,620,440,40,.7,'#ffe2c6'],
+ ['rat','Register Alias Tables','',1285,620,130,40,.6,'#ffd3d6'],
+ ['rob','Reorder Buffer','576 entry',815,700,1330,40,.42,'#ffd3d6',{grid:1}],
+ ...[215,365,512,661,805,955].map((x,k)=>['is'+k,'Int Scheduler '+k,'24 entry',x,770,130,40,.36,'#ffd3d6',{grid:1}]),
+ ['nsq','Non-Scheduling Queue','96 entry',1260,770,440,40,.36,'#ffd3d6',{grid:1}],
+ ['irf','Integer Register File','288 entry',585,840,870,40,.5,'#ffd3d6'],
+ ...[1114,1264,1414].map((x,k)=>['fs'+k,'FP Scheduler '+k,'46 entry',x,840,110,40,.36,'#ffd3d6',{grid:1}]),
+ ['frf','FP Register File','384 × 512b',1260,910,440,40,.5,'#ffd3d6'],
+ ['lsu','Load Store Unit','',875,1095,290,80,.22,'#ffe2c6',{nolabel:1}],
+ ['lq','Load Queue','288 entry',806,1102,128,48,.36,'#ffd3d6',{grid:1,base:.22}],
+ ['sq','Store Queue','128 entry',950,1102,128,48,.36,'#ffd3d6',{grid:1,base:.22}],
+ ['dtlb','DTLB','96 / 4096',680,1258,118,55,.6,'#ffcf9e'],
+ ['l1d','L1 Data Cache','48 KB 12-Way · 4 cyc',886,1275,290,90,1.4,'#ffd3d6',{slices:12}],
+ ['l2','L2 Cache','1 MB 16-Way',1605,805,110,130,3.0,'#ffd3d6',{slices:16}],
+ ['l2mab','L2 MAB','127 entry',1605,900,110,58,.42,'#dbe5fb',{grid:1}],
+ ['l3','L3 Cache','48 MB 16-Way',1825,805,110,350,5.5,'#ffd3d6',{slices:16}],
+ ['l3mab','L3 MAB','480 entry',1825,1022,110,85,.42,'#dbe5fb',{grid:1}],
+ ['dram','Fabric / DRAM','96-128 B/cyc',2060,805,110,240,2.4,'#e3e8f0',{sticks:4,nofront:1}],
+];
+for(const d of BDEF)addBlock(...d);
+L1D.blk='l1d';L2.blk='l2';L3.blk='l3';
+for(const u of UNITS)addBlock(u.id,u.lbl,'',u.x,900,62,34,.42,u.caps.includes('agu')?'#ffc46b':'#ffb04a',{bounce:1,res:160});
+for(const u of FUNITS)addBlock(u.id,u.lbl,'',u.x,980,70,40,.42,'#ffa94d',{bounce:1,res:160});
+
+// floating labels
+const SPRITES=[];
+[['bp','Branch Predictor','#eab308',1.6],['opc','Op Cache','#4f6bf5',1.6],['l1i','L1I · 32KB','#e8930c',1.6],['dec0','Decoders','#16a34a',1.4],['moq','Micro-Op Queue','#e8930c',1.2],
+ ['ren','Rename · 8-wide','#7c5cf6',1.4],['rob','ROB · 576','#4f6bf5',1.3],['is2','Int Schedulers ×6','#3b82f6',1.3],['fs1','FP Schedulers','#ec4899',1.3],['lsu','Load / Store','#10b981',1.4],
+ ['l1d','L1D · 48KB','#10b981',1.4],['l2','L2 · 1MB','#06b6d4',1.4],['l3','L3 · 48MB','#8b5cf6',1.4],['dram','DRAM','#ef4444',1.4],['u6','Int Units','#e8930c',1.2],['f2','FP Units','#ec4899',1.2]]
+ .forEach(([id,t,c,dy])=>{const b=BLK[id];const sp=spriteLabel(t,c);sp.position.set(b.x,b.y1+dy,b.z);sp.userData.y=b.y1+dy;world.add(sp);SPRITES.push(sp)});
+
+// entry grids
+const PAL={};const C=h=>new THREE.Color(h);
+PAL.empty=C('#f3f5f9');PAL.done=C('#22c55e');PAL.wrong=C('#b5bbc8');PAL.misp=C('#ef4444');PAL.flush=C('#ff5a5f');PAL.wait=C('#dfe5ee');
+PAL.t={};PAL.lt={};for(const k in TCOL){PAL.t[k]=C(TCOL[k]);PAL.lt[k]=C(TCOL[k]).lerp(C('#ffffff'),.55)}
+PAL.lvl={};for(const k in LVLCOL)PAL.lvl[k]=C(LVLCOL[k]);
+class Grid{
+  constructor(id,cap,cols,rows,o={}){
+    const b=BLK[id];this.cap=cap;this.b=b;const pw=b.w*.95/cols,pd=b.d*.84/rows;const sx=pw*.76,sz=pd*.7,sy=o.h||.09;
+    const geo=new THREE.BoxGeometry(sx,sy,sz);geo.translate(0,sy/2,0);
+    this.m=new THREE.InstancedMesh(geo,new THREE.MeshStandardMaterial({roughness:.45,metalness:0}),cap);this.m.userData.id=id;
+    this.pos=[];const x0=b.x-b.w*.475+pw/2,z0=b.z-b.d*.42+pd/2;
+    this.h=new Float32Array(cap).fill(1);this.th=new Float32Array(cap).fill(1);this.dm=new THREE.Object3D();
+    for(let i=0;i<cap;i++){const col=i%cols,row=Math.floor(i/cols);this.pos[i]=new THREE.Vector3(x0+col*pw,b.y1,z0+row*pd);this.m.setColorAt(i,PAL.empty)}
+    this.commit(1);world.add(this.m);PICK.push(this.m);
+  }
+  clear(){for(let i=0;i<this.cap;i++){this.m.setColorAt(i,PAL.empty);this.th[i]=1}}
+  set(i,col,h=1){if(i<0||i>=this.cap)return;this.m.setColorAt(i,col);this.th[i]=h}
+  commit(dt){const k=Math.min(1,dt*14);for(let i=0;i<this.cap;i++){this.h[i]+=(this.th[i]-this.h[i])*k;this.dm.position.copy(this.pos[i]);this.dm.scale.set(1,this.h[i],1);this.dm.updateMatrix();this.m.setMatrixAt(i,this.dm.matrix)}
+    this.m.instanceMatrix.needsUpdate=true;if(this.m.instanceColor)this.m.instanceColor.needsUpdate=true}
+}
+const G={rob:new Grid('rob',ROB_CAP,144,4,{h:.1}),moq:new Grid('moq',MOQ_CAP,48,2),nsq:new Grid('nsq',NSQ_CAP,48,2),lq:new Grid('lq',LQ_CAP,36,8,{h:.07}),sq:new Grid('sq',SQ_CAP,32,4,{h:.08}),
+  l2mab:new Grid('l2mab',L2MAB_CAP+1,16,8,{h:.08}),l3mab:new Grid('l3mab',L3MAB_CAP,32,15,{h:.06})};
+const GIS=[0,1,2,3,4,5].map(k=>new Grid('is'+k,IS_CAP,12,2,{h:.1}));
+const GFS=[0,1,2].map(k=>new Grid('fs'+k,FS_CAP,23,2,{h:.09}));
+// ROB pointers
+const cone=(col)=>{const m=new THREE.Mesh(new THREE.ConeGeometry(.16,.4,16),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.5}));m.rotation.x=Math.PI;world.add(m);return m};
+const headPtr=cone('#16a34a'),tailPtr=cone('#4f6bf5');
+
+// links with flowing stripes
+function stripeCanvas(){const c=document.createElement('canvas');c.width=64;c.height=8;const g=c.getContext('2d');g.fillStyle='#c3c7fa';g.fillRect(0,0,64,8);g.fillStyle='#7f88f2';g.fillRect(0,0,20,8);return c}
+const STRIPE=stripeCanvas();const LINKS={};
+function addLink(a,b,mode){
+  const A=BLK[a],B=BLK[b];const y=.2;let pts;
+  const p=(x,z)=>new THREE.Vector3(x,y,z);
+  if(mode==='h'||(!mode&&Math.abs(A.x-B.x)>Math.abs(A.z-B.z))){const mx=(A.x+B.x)/2;pts=[p(A.x,A.z),p(mx,A.z),p(mx,B.z),p(B.x,B.z)]}
+  else{const mz=(A.z+B.z)/2;pts=[p(A.x,A.z),p(A.x,mz),p(B.x,mz),p(B.x,B.z)]}
+  const path=new THREE.CurvePath();for(let i=0;i<pts.length-1;i++)if(pts[i].distanceTo(pts[i+1])>.01)path.add(new THREE.LineCurve3(pts[i],pts[i+1]));
+  const len=path.getLength();const tex=new THREE.CanvasTexture(STRIPE);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(Math.max(1,len/.8),1);tex.colorSpace=THREE.SRGBColorSpace;
+  const mat=new THREE.MeshStandardMaterial({map:tex,roughness:.6,emissive:'#6d76ee',emissiveIntensity:0});
+  const m=new THREE.Mesh(new THREE.TubeGeometry(path,Math.max(8,Math.round(len*3)),.075,8,false),mat);m.receiveShadow=true;world.add(m);
+  LINKS[a+'>'+b]=LINKS[b+'>'+a]={m,tex,mat,traffic:0};
+}
+[['bp','fq'],['fq','itlb'],['itlb','l1i','h'],['l1i','iq0','v'],['l1i','iq1','v'],['iq0','dec0'],['iq1','dec1'],['dec0','moq'],['dec1','moq'],['ucode','moq'],['bp','opc','v'],['opc','moq'],['dec0','opc','h'],
+ ['moq','ren'],['ren','rat','h'],['ren','rob'],['rob','is0'],['rob','is1'],['rob','is2'],['rob','is3'],['rob','is4'],['rob','is5'],['rob','nsq'],['nsq','fs0'],['nsq','fs1'],['nsq','fs2'],
+ ['fs0','frf'],['fs1','frf'],['fs2','frf'],['rob','rat','v'],['u1','lsu','v'],['u3','lsu','v'],['u5','lsu','v'],['u7','lsu','v'],['f4','lsu'],['f5','lsu'],['lsu','l1d','v'],['dtlb','l1d','h'],
+ ['l1d','l2','h'],['l1i','l2','h'],['l2','l3','h'],['l3','dram','h']].forEach(l=>addLink(...l));
+for(let k=0;k<6;k++)addLink('is'+k,'irf','v');
+for(const u of UNITS)addLink('irf',u.id,'v');for(const u of FUNITS)addLink('frf',u.id,'v');
+
+/* ============================================================
+   8. visual events (particles, rings, pulses)
+   ============================================================ */
+const PGEO={op:new THREE.SphereGeometry(.15,14,10),line:new THREE.BoxGeometry(.3,.3,.3),big:new THREE.SphereGeometry(.32,18,12),spark:new THREE.OctahedronGeometry(.2)};
+const MATS=new Map();
+function pmat(hex,alpha=1){const k=hex+alpha;let m=MATS.get(k);if(!m){m=new THREE.MeshStandardMaterial({color:hex,emissive:hex,emissiveIntensity:.5,roughness:.3,metalness:.1,transparent:alpha<1,opacity:alpha});MATS.set(k,m)}return m}
+const parts=[],pfree={op:[],line:[],big:[],spark:[]};let pCount=0;
+const TRAIL_N=4500,trail=new THREE.InstancedMesh(new THREE.SphereGeometry(.11,8,6),new THREE.MeshBasicMaterial({transparent:true,opacity:.28,depthWrite:false}),TRAIL_N);
+trail.frustumCulled=false;trail.setColorAt(0,new THREE.Color('#fff'));trail.count=0;const colC={};const cc=h=>colC[h]||(colC[h]=new THREE.Color(h));const tO=new THREE.Object3D();world.add(trail);
+const ringGeo=new THREE.RingGeometry(.5,.66,48);ringGeo.rotateX(-Math.PI/2);const rings=[],rfree=[];
+const EVCC=[null,'#22c55e','#ef4444','#3b82f6','#f97316','#22d3ee'].map(h=>h&&new THREE.Color(h));
+const V={enabled:true,
+  way(id,w,k){const b=BLK[id];if(!b||!b.wf||!this.enabled||!EVCC[k])return;b.wf[w]=1;b.wc[w].copy(EVCC[k])},followId:-1,followWant:false,shake:0,budget:40,lastToast:0,flashSlots:[],
+  dur(cyc){return clamp(cyc/speed,.35,1.4)},
+  spawn(nodes,o){
+    if(!this.enabled)return null;const kind=o.kind||'op';
+    let m=pfree[kind].pop();
+    if(!m){if(pCount>1100)return null;m=new THREE.Mesh(PGEO[kind]);world.add(m);pCount++}
+    m.material=pmat(o.color,o.alpha||1);m.visible=true;m.scale.setScalar(o.scale||1);
+    const pts=nodes.map(nodePos);
+    const p={m,path:buildPath(pts,o.lift??.6),t:0,dur:o.dur||1,kind,opId:o.opId??-1,end:o.pulse===false?null:nodes[nodes.length-1],col:o.color,onEnd:o.onEnd,h:kind==='spark'?null:[0,1,2,3,4].map(()=>pts[0].clone())};
+    parts.push(p);bumpLinks(nodes);return p;
+  },
+  ring(pos,color,scale=4,dur=.9){if(!this.enabled)return;let r=rfree.pop();if(!r){r=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide}));world.add(r)}
+    r.material.color.set(color);r.visible=true;r.position.copy(pos);r.position.y+=.05;rings.push({r,t:0,dur,scale})},
+  pulse(id,color,s=1){const b=BLK[id];if(!b||!this.enabled)return;b.pulse=Math.min(1.4,Math.max(b.pulse,s));b.pc.set(color)},
+  opColor(op){return op.wrong?'#9aa1b0':TCOL[op.type]},
+  fetch(op,depth){
+    if(!this.enabled)return;
+    if(op.src==='dec')this.pulse(Math.floor(op.pc/64)%2?'dec1':'dec0','#16a34a',.6);
+    if(op.src==='opc')this.pulse('opc','#4f6bf5',.5);
+    if(op.src==='ucode')this.pulse('ucode','#0ea5c6',.9);
+    if(!op.viz)return;
+    let path;const d=Math.floor(op.pc/64)%2;
+    if(op.src==='opc')path=['bp','opc','moq'];else if(op.src==='dec')path=['bp','fq','itlb','l1i',d?'iq1':'iq0',d?'dec1':'dec0','moq'];else path=['ucode','moq'];
+    this.spawn(path,{color:this.opColor(op),alpha:op.wrong?.55:1,dur:this.dur(depth)*(op.src==='dec'?1.3:1),opId:op.id});
+  },
+  dispatch(op,sk){
+    if(!this.enabled)return;this.pulse('ren','#7c5cf6',.35);
+    if(!op.viz)return;const slot=G.rob.pos[op.slot].clone();slot.y+=.12;
+    if(CLS[op.type]==='elim'){this.spawn(['moq','ren'],{color:'#a3acbd',kind:'spark',dur:this.dur(1),opId:op.id,onEnd:()=>{this.ring(BLK.ren.top,'#94a3b8',2.2,.6);this.spawn(['ren',slot],{color:'#22c55e',kind:'spark',scale:.6,dur:.5,pulse:false})}});return}
+    const tgt=sk>=0?'is'+sk:'nsq';
+    this.spawn(['moq','ren',slot,tgt],{color:this.opColor(op),alpha:op.wrong?.55:1,dur:this.dur(2),opId:op.id});
+  },
+  nsq(op,k){if(op.viz)this.spawn(['nsq','fs'+k],{color:this.opColor(op),dur:this.dur(1),opId:op.id})},
+  issue(op,u,isFp){
+    if(!this.enabled)return;const b=BLK[u.id];this.pulse(u.id,this.opColor(op),1);
+    if(op.type==='div')this.ring(b.top,'#a855f7',2,.8);
+    if(!op.viz)return;
+    const src=isFp?'fs'+op.fk:'is'+op.sk,rf=isFp?'frf':'irf';
+    const path=[src,rf,u.id];if(op.type==='ld')path.push('lq','l1d');if(op.type==='st')path.push('sq');
+    this.spawn(path,{color:op.mispredict?'#ef4444':this.opColor(op),alpha:op.wrong?.55:1,dur:this.dur(op.type==='ld'?3:2),opId:op.id});
+  },
+  retire(op){if(!this.enabled)return;if(op.viz&&Math.random()<.5){const s=G.rob.pos[op.slot].clone();s.y+=.15;this.spawn([s,'rat'],{color:'#22c55e',kind:'spark',scale:.55,dur:.55,lift:.4})}},
+  flush(br,younger,n,why){
+    if(!this.enabled)return;
+    younger.forEach((o,k)=>{if(o.slot>=0)this.flashSlots.push({s:o.slot,t:NOW+k*.005})});
+    if(why==='misp'){
+      const p=BLK[br.uid||'u9'].top;this.ring(p,'#ef4444',7,1.1);this.ring(BLK.rob.top,'#ef4444',9,1.2);
+      this.spawn([br.uid||'u9','ren','bp'],{color:'#ef4444',kind:'big',dur:.9,lift:2.2,onEnd:()=>{this.ring(BLK.bp.top,'#ef4444',5,.9)}});
+      this.pulse('bp','#ef4444',1.3);this.pulse('rob','#ef4444',.9);this.shake=.12;
+      if(NOW-this.lastToast>1.1){this.lastToast=NOW;toast('分岐予測ミス · パイプラインをフラッシュ',`${br.asm} · ${n} opsを破棄`,'#e5484d')}
+    }else{this.ring(BLK.rob.top,'#7c5cf6',12,1.4);this.shake=.2;toast('パイプライン全消去',`${n} opsを破棄して再フェッチ`,'#7c5cf6')}
+  },
+  memMiss(lvl,op,lat){
+    if(!this.enabled)return;if(this.budget<1&&!(op&&op.viz))return;this.budget--;
+    const path=lvl==='L2'?['l1d','l2','l1d']:lvl==='L3'?['l1d','l2','l3','l2','l1d']:['l1d','l2','l3','dram','l3','l2','l1d'];
+    this.spawn(path,{color:LVLCOL[lvl],kind:'line',dur:clamp(lat/speed,.8,4),lift:.9});
+    if(lvl==='DRAM'){this.pulse('dram','#ef4444',1);this.pulse('l3mab','#ef4444',.6)}else if(lvl==='L3')this.pulse('l3','#8b5cf6',.6);
+    this.pulse('l2mab','#06b6d4',.4);
+  },
+  prefetch(lvl,lat){if(!this.enabled||this.budget<1)return;this.budget-=.7;
+    const path=lvl==='L2'?['l2','l1d']:lvl==='L3'?['l3','l2','l1d']:['dram','l3','l2','l1d'];
+    this.spawn(path,{color:'#22d3ee',kind:'line',alpha:.75,scale:.75,dur:clamp(lat/speed,.7,3.5),lift:.6})},
+  imiss(lvl,lat){if(!this.enabled)return;const path=lvl==='L2'?['l2','l1i']:lvl==='L3'?['l3','l2','l1i']:['dram','l3','l2','l1i'];
+    this.spawn(path,{color:'#f59e0b',kind:'line',dur:clamp(lat/speed,.8,3.5),lift:1.5});this.pulse('l1i','#f59e0b',1)},
+  walk(){if(!this.enabled||this.budget<1)return;this.budget-=.5;this.spawn(['dtlb','l2','dtlb'],{color:'#a855f7',kind:'spark',dur:clamp(30/speed,.6,2),lift:1});this.pulse('dtlb','#a855f7',1)},
+  btbMiss(){if(!this.enabled)return;this.pulse('bp','#f59e0b',1);this.ring(BLK.bp.top,'#f59e0b',2.5,.7)},
+  ucode(){if(!this.enabled)return;this.ring(BLK.ucode.top,'#0ea5c6',2.5,.8)},
+  stlf(op){if(!this.enabled)return;if(op.viz||this.budget>0){this.budget-=.3;this.spawn(['sq','lq'],{color:'#f97316',kind:'spark',dur:.6,lift:1.1,scale:.8})}},
+  storeCommit(op){if(this.enabled&&op.viz)this.spawn(['sq','l1d'],{color:'#f97316',kind:'line',scale:.6,dur:.6,lift:.5})},
+};
+function nodePos(n){if(n instanceof THREE.Vector3)return n.clone();const b=BLK[n];const v=b.top.clone();v.x+=(Math.random()-.5)*Math.min(b.w*.55,1.4);v.z+=(Math.random()-.5)*Math.min(b.d*.4,.4);v.y+=.2;return v}
+function buildPath(pts,lift){const segs=[];let L=0;for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];const d=a.distanceTo(b);const m=a.clone().add(b).multiplyScalar(.5);m.y=Math.max(a.y,b.y)+lift+d*.16;const len=d*1.1+.01;segs.push({a,m,b,len,L0:L});L+=len}return{segs,L}}
+const tmpV=new THREE.Vector3(),tmpC=new THREE.Color(),HOT=new THREE.Color('#ff5a3c');
+function evalPath(p,t,out){const s=t*p.L;let g=p.segs[p.segs.length-1];for(const sg of p.segs)if(s<=sg.L0+sg.len){g=sg;break}
+  let u=clamp((s-g.L0)/g.len,0,1);u=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;const a=g.a,m=g.m,b=g.b,iu=1-u;
+  out.set(iu*iu*a.x+2*iu*u*m.x+u*u*b.x,iu*iu*a.y+2*iu*u*m.y+u*u*b.y,iu*iu*a.z+2*iu*u*m.z+u*u*b.z);return out}
+function bumpLinks(nodes){for(let i=0;i<nodes.length-1;i++){const a=nodes[i],b=nodes[i+1];if(typeof a==='string'&&typeof b==='string'){const l=LINKS[a+'>'+b];if(l)l.traffic=Math.min(6,l.traffic+1)}}}
+function updateViz(dt){
+  V.budget=Math.min(40*CFG.density,V.budget+dt*30*CFG.density);
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.t+=dt/p.dur;
+    if(p.t>=1){p.m.visible=false;pfree[p.kind].push(p.m);parts.splice(i,1);if(p.end&&typeof p.end==='string')V.pulse(p.end,p.col,.45);if(p.onEnd)p.onEnd();continue}
+    evalPath(p.path,p.t,p.m.position);if(p.kind==='line'||p.kind==='spark'){p.m.rotation.x+=dt*3;p.m.rotation.y+=dt*4}
+    if(p.h){for(let k=4;k>0;k--)p.h[k].copy(p.h[k-1]);p.h[0].copy(p.m.position)}}
+  let tn=0;for(const p of parts){if(!p.h)continue;const sc=p.m.scale.x*(p.kind==='big'?2.2:p.kind==='line'?1.4:1.2);const col=cc(p.col);
+    for(let k=1;k<5&&tn<TRAIL_N;k++){tO.position.copy(p.h[k]);tO.scale.setScalar(sc*(1-k/5.5));tO.updateMatrix();trail.setMatrixAt(tn,tO.matrix);trail.setColorAt(tn,col);tn++}}
+  trail.count=tn;trail.instanceMatrix.needsUpdate=true;if(trail.instanceColor)trail.instanceColor.needsUpdate=true;
+  for(let i=rings.length-1;i>=0;i--){const r=rings[i];r.t+=dt/r.dur;if(r.t>=1){r.r.visible=false;rfree.push(r.r);rings.splice(i,1);continue}
+    const e=1-Math.pow(1-r.t,3);r.r.scale.setScalar(.2+e*r.scale);r.r.material.opacity=.85*(1-r.t)}
+  for(const id in BLK){const b=BLK[id];
+    if(b.wf){for(let i=0;i<b.wf.length;i++){const f=b.wf[i],mt=b.mats[i];if(f>.003||b.pulse>.002){mt.emissive.copy(b.pc).multiplyScalar(b.pulse*.45);tmpC.copy(b.wc[i]).multiplyScalar(f*.75);mt.emissive.add(tmpC);b.wf[i]=f*Math.exp(-dt*5)}else if(f>0||mt.emissive.r>0){b.wf[i]=0;mt.emissive.setRGB(0,0,0)}}
+      if(b.pulse>.002)b.pulse*=Math.exp(-dt*4.5);else b.pulse=0;continue}
+    if(b.pulse>.002){for(const mt of b.mats)mt.emissive.copy(b.pc).multiplyScalar(b.pulse*.55);b.pulse*=Math.exp(-dt*4.5);
+      if(b.bounce)b.mesh.position.y=b.y0+b.h/2+b.pulse*.22}else if(b.pulse>0){b.pulse=0;for(const mt of b.mats)mt.emissive.setRGB(0,0,0);if(b.bounce)b.mesh.position.y=b.y0+b.h/2}}
+  for(const u of UNITS)BLK[u.id].mat.color.copy(BLK[u.id].base).lerp(HOT,Math.min(1,SIM.uUtil[u.i])*.6);
+  for(const u of FUNITS)BLK[u.id].mat.color.copy(BLK[u.id].base).lerp(HOT,Math.min(1,SIM.fUtil[u.i])*.6);
+  SPRITES.forEach((sp,i)=>{sp.position.y=sp.userData.y+Math.sin(NOW*1.4+i*.9)*.07});
+  for(const k in LINKS){const l=LINKS[k];if(l._f===frameNo)continue;l._f=frameNo;l.tex.offset.x-=dt*(.25+l.traffic*.9);l.mat.emissiveIntensity=Math.min(.7,l.traffic*.12);l.traffic*=Math.exp(-dt*2);l.m.visible=CFG.links}
+  if(V.shake>.001){world.position.set((Math.random()-.5)*V.shake,0,(Math.random()-.5)*V.shake);V.shake*=Math.exp(-dt*7)}else world.position.set(0,0,0);
+  updateGrids(dt);
+}
+function opCell(op,c){
+  if(op.wrong)return[PAL.wrong,op.tI>=0?1.6:1];
+  if(op.mispredict&&op.done)return[PAL.misp,2.4];
+  if(op.done)return[PAL.done,1.25];
+  if(op.tI>=0){const lv=op.type==='ld'&&op.lvl&&PAL.lvl[op.lvl];return[lv||PAL.t[op.type],2.2]}
+  return[PAL.lt[op.type],1];
+}
+function updateGrids(dt){
+  const c=SIM.cycle;
+  G.rob.clear();for(const op of SIM.rob){const [col,h]=opCell(op,c);G.rob.set(op.slot,col,h)}
+  V.flashSlots=V.flashSlots.filter(f=>NOW-f.t<.7);const occ=new Set();if(V.flashSlots.length)for(const o of SIM.rob)occ.add(o.slot);for(const f of V.flashSlots){const a=NOW-f.t;if(a>=0&&!occ.has(f.s))G.rob.set(f.s,PAL.flush,3.2*(1-a/.7)+.3)}
+  G.rob.commit(dt);
+  if(SIM.rob.length){const hp=G.rob.pos[SIM.rob[0].slot];headPtr.position.lerp(tmpV.set(hp.x,hp.y+.75,hp.z-.25),Math.min(1,dt*10))}
+  const tp=G.rob.pos[SIM.robTail];tailPtr.position.lerp(tmpV.set(tp.x,tp.y+.75,tp.z-.25),Math.min(1,dt*10));
+  G.moq.clear();SIM.fePipe.forEach((op,i)=>G.moq.set(i,op.wrong?PAL.wrong:op.arrive>c?PAL.lt[op.type]:PAL.t[op.type],op.arrive>c?1:1.6));G.moq.commit(dt);
+  for(let k=0;k<6;k++){const g=GIS[k];g.clear();SIM.intS[k].forEach((op,i)=>{const r=ready(op,c+1);g.set(i,op.wrong?PAL.wrong:r?PAL.t[op.type]:PAL.lt[op.type],r?1.8:1)});g.commit(dt)}
+  for(let k=0;k<3;k++){const g=GFS[k];g.clear();SIM.fpS[k].forEach((op,i)=>{const r=ready(op,c+1);g.set(i,r?PAL.t[op.type]:PAL.lt[op.type],r?1.8:1)});g.commit(dt)}
+  G.nsq.clear();SIM.nsq.forEach((op,i)=>G.nsq.set(i,PAL.lt[op.type]));G.nsq.commit(dt);
+  G.lq.clear();let li=0;for(const op of SIM.rob){if(op.type!=='ld')continue;let col=PAL.lt.ld,h=1;if(op.tI>=0&&!op.done){col=PAL.lvl[op.lvl]||PAL.t.ld;h=2.4}else if(op.done){col=PAL.done;h=1.2}if(op.wrong)col=PAL.wrong;G.lq.set(li++,col,h)}G.lq.commit(dt);
+  G.sq.clear();SIM.sqList.forEach((op,i)=>G.sq.set(i,op.wrong?PAL.wrong:op.done?PAL.done:op.addrKnown?PAL.t.st:PAL.lt.st,op.done?1.2:1.6));G.sq.commit(dt);
+  G.l2mab.clear();G.l3mab.clear();let a=0,b=0;
+  for(const [,v] of SIM.inflight){if(v.ready<=c)continue;if(v.lvl==='L3'||v.lvl==='DRAM'){G.l2mab.set(a++,v.pf?PAL.lvl.PF:PAL.lvl[v.lvl],2.2)}if(v.lvl==='DRAM'){G.l3mab.set(b++,v.pf?PAL.lvl.PF:PAL.lvl.DRAM,2.6)}}
+  G.l2mab.commit(dt);G.l3mab.commit(dt);
+}
+
+/* camera presets */
+const CAMS={overview:[[2,31,27],[1.5,0,1.5],'全体'],frontend:[[-5,17,4],[-4,0,-9],'フロントエンド'],bp:[[-17,9,-3],[-12,0,-10],'分岐予測'],rename:[[-1,10,10],[-1,0,1.5],'Rename · ROB'],
+  exec:[[-6,14,16],[-5,0,3.8],'整数実行'],fp:[[8,11,14],[6,0,4.5],'FP実行'],lsu:[[-3,10,19],[-3,0,9.5],'Load/Store'],memory:[[10,19,30],[7,1,6.5],'メモリ階層'],tower:[[30,8,16],[19,2.6,3],'キャッシュタワー']};
+let fly=null;
+function flyTo(k,dur=1.6){const c=CAMS[k];if(!c)return;const p1=new THREE.Vector3(...c[0]);fly={p0:camera.position.clone(),t0:controls.target.clone(),p1,t1:new THREE.Vector3(...c[1]),t:0,dur,arc:camera.position.distanceTo(p1)*.14}}
+function flyToBlock(id){const b=BLK[id];const t=new THREE.Vector3(b.x,b.y1*.5,b.z);const off=camera.position.clone().sub(controls.target).setLength(Math.max(6,Math.max(b.w,b.h)*2.4));fly={p0:camera.position.clone(),t0:controls.target.clone(),p1:t.clone().add(off),t1:t,t:0,dur:1}}
+
+/* ============================================================
+   9. UI
+   ============================================================ */
+let speed=5,running=true,cur=null,P={},frameNo=0;
+const spdFromV=v=>0.5*Math.pow(800,v/100),vFromSpd=s=>100*Math.log(s/0.5)/Math.log(800);
+function setSpeed(s){speed=clamp(s,.5,400);$('#spd').value=vFromSpd(speed);$('#spdV').textContent=(speed<10?speed.toFixed(1):Math.round(speed))+' cyc/s'}
+$('#spd').oninput=e=>setSpeed(spdFromV(+e.target.value));
+$('#bPlay').onclick=()=>{SIM.brk=null;running=!running;$('#bPlay').textContent=running?'❚❚':'▶';$('#bPlay').classList.toggle('on',!running)};
+$('#bStep').onclick=()=>{if(running)$('#bPlay').click();step()};
+$('#bReset').onclick=()=>applyScenario(cur);
+$('#bFollow').onclick=()=>{CFG.follow=!CFG.follow;$('#bFollow').classList.toggle('on',CFG.follow);if(CFG.follow){V.followWant=true}else{V.followId=-1;$('#follow').style.display='none'}};
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.code==='Space'){e.preventDefault();$('#bPlay').click()}else if(e.key==='ArrowRight')$('#bStep').click();else if(e.key==='r'||e.key==='R')$('#bReset').click();else if(e.key==='f'||e.key==='F')$('#bFollow').click();else if(e.key==='s'||e.key==='S')snapshot();else if(e.key==='t'||e.key==='T')$('#bTour').click();else if(/^[0-9]$/.test(e.key)){const i=e.key==='0'?9:+e.key-1;stopTour();applyScenario(SCN[i])}});
+
+// camera bar
+const cb=$('#camBar');for(const k in CAMS){const b=document.createElement('button');b.className='btn';b.textContent=CAMS[k][2];b.onclick=()=>flyTo(k);cb.appendChild(b)}
+const rotB=document.createElement('button');rotB.className='btn';rotB.textContent='⟳ 自動回転';rotB.onclick=()=>{CFG.rotate=!CFG.rotate;controls.autoRotate=CFG.rotate;rotB.classList.toggle('on',CFG.rotate)};cb.appendChild(rotB);
+// legend
+$('#legend').innerHTML=[['ALU','alu'],['MUL','mul'],['DIV','div'],['BR','br'],['LOAD','ld'],['STORE','st'],['FMA','fma'],['FADD','fadd'],['ELIM','zero']].map(([n,k])=>`<span><i style="background:${TCOL[k]}"></i>${n}</span>`).join('')+
+ `<span><i style="background:#9aa1b0"></i>WRONG PATH</span><span><i style="background:#22c55e"></i>DONE</span><span><i style="background:#06b6d4;border-radius:2px"></i>L2</span><span><i style="background:#8b5cf6;border-radius:2px"></i>L3</span><span><i style="background:#ef4444;border-radius:2px"></i>DRAM</span><span><i style="background:#22d3ee;border-radius:2px"></i>PREFETCH</span>`;
+
+// scenario list
+const scl=$('#scList');
+SCN.forEach((s,i)=>{const d=document.createElement('div');d.className='scen';d.dataset.id=s.id;
+  d.innerHTML=`<div class="no">${String(i+1).padStart(2,'0')}</div><div class="nm">${s.name}</div><div class="tg">${s.tags.map(t=>`<span class="tag ${t}">${t}</span>`).join('')}</div>`;
+  d.onclick=()=>{stopTour();applyScenario(s)};scl.appendChild(d)});
+function renderBrief(){
+  const s=cur;const b=$('#brief');
+  b.innerHTML=`<h3>Briefing<span class="r">${String(SCN.indexOf(s)+1).padStart(2,'0')} / ${SCN.length}</span></h3><div class="ttl">${s.name}</div><p>${s.desc}</p><ul>${s.watch.map(w=>`<li>${w}</li>`).join('')}</ul>`;
+  for(const p of s.params){const box=document.createElement('div');box.className='prm inset';
+    const fmt=v=>p.opts?p.opts[v][1]:v+(p.unit||'');
+    box.innerHTML=`<label>${p.label}<b>${fmt(P[p.k])}</b></label><input type="range" min="${p.min}" max="${p.max}" step="${p.step}" value="${P[p.k]}">`;
+    const inp=box.querySelector('input'),lb=box.querySelector('b');
+    inp.oninput=()=>{P[p.k]=+inp.value;lb.textContent=fmt(P[p.k])};
+    inp.onchange=()=>{if(cur.prewarm)cur.prewarm(P);clearPipe();markReset()};inp.addEventListener('change',()=>logEv('SYS',`${p.label} = ${fmt(P[p.k])}`,'#4f6bf5'));b.appendChild(box)}
+}
+function resetAll(){
+  SIM=newSim();ALLC.forEach(c=>{c.flush();c.resetStats();c.ema=-1});BP.reset();BP.resetStats();
+}
+function applyScenario(s){
+  cur=s;P={};s.params.forEach(p=>P[p.k]=p.v);rng=mulberry32(20261111);
+  parts.forEach(p=>{p.m.visible=false;pfree[p.kind].push(p.m)});parts.length=0;
+  resetAll();SIM.gen=s.build(P);if(s.prewarm)s.prewarm(P);
+  if(s.warm){V.enabled=false;const lim=SIM.cycle+60000;while(SIM.stats.inst<s.warm&&SIM.cycle<lim)step();if(s.bpCold){BP.reset();clearPipe()}V.enabled=true;
+    SIM.stats={inst:0,uops:0,flushes:0,flushedOps:0,dram:0,pf:0,walks:0,l1im:0,ldN:0,ldLat:0,elim:0,stlf:0};ALLC.forEach(c=>{c.resetStats();c.ema=-1});BP.resetStats();SIM.statC0=SIM.cycle}
+  else SIM.statC0=0;
+  markReset();
+  document.querySelectorAll('.scen').forEach(d=>d.classList.toggle('on',d.dataset.id===s.id));
+  setSpeed(s.speed);flyTo(s.cam);renderBrief();
+  logEv('SYS',`シナリオ開始 · ${s.name}${s.warm?` · ${fmtN(SIM.statC0)}cycのウォームアップ済み`:''}`,'#4f6bf5',true);
+  toast(s.name,s.warm?`${fmtN(SIM.cycle)}サイクルのウォームアップ後から開始`:'すべて空の状態から開始','#4f6bf5');
+  if(CFG.follow)V.followWant=true;
+}
+// settings
+const SETS=[['prefetch','ハードウェアプリフェッチ','L1D・L2のストライド検出',()=>{}],['opcache','Op Cache','OFFで常にデコード経路',()=>{OPC.flush()}],['huge','2MBページ','DTLBのカバー範囲を拡大',()=>{DTLB1.flush();DTLB2.flush()}],
+  ['dec8','デコード8-wide','2クラスタを1スレッドで使う',null],['links','データパスの流れ','',null],['labels','浮遊ラベル','',()=>SPRITES.forEach(s=>s.visible=CFG.labels)],['shadows','影','',()=>{renderer.shadowMap.enabled=CFG.shadows;scene.traverse(o=>{if(o.material)o.material.needsUpdate=true})}]];
+const st=$('#settings');
+for(const [k,l,sub,fn] of SETS){const d=document.createElement('div');d.className='sw';const on=k==='dec8'?CFG.decW===8:CFG[k];
+  d.innerHTML=`<span>${l}${sub?`<small>${sub}</small>`:''}</span><div class="tog ${on?'on':''}"></div>`;
+  d.querySelector('.tog').onclick=e=>{if(k==='dec8'){CFG.decW=CFG.decW===8?4:8;e.target.classList.toggle('on',CFG.decW===8)}else{CFG[k]=!CFG[k];e.target.classList.toggle('on',CFG[k])}fn&&fn();markReset();logEv('SYS',`${l} → ${k==='dec8'?CFG.decW+'-wide':CFG[k]?'ON':'OFF'}`,'#4f6bf5')};
+  st.appendChild(d)}
+$('#dl').oninput=e=>{CFG.dramLat=+e.target.value;$('#dlV').textContent=CFG.dramLat+' cyc'};$('#dl').onchange=()=>markReset();
+$('#dn').oninput=e=>{CFG.density=+e.target.value;$('#dnV').textContent='×'+CFG.density.toFixed(1)};
+// injections
+document.querySelectorAll('[data-inj]').forEach(b=>b.onclick=()=>{
+  const k=b.dataset.inj,pc=0x4ff000;
+  if(k==='br'){SIM.fe.forceMisp=true;logEv('SYS','次の条件分岐を必ず予測ミスにする','#e5484d');toast('分岐予測ミスを注入','次の条件分岐で発動','#e5484d')}
+  if(k==='dram'){SIM.injectQ.push({type:'ld',asm:'mov r15, [far_ptr]',pc,addr:0xA0000000+Math.floor(Math.random()*(1<<24))*64,wr:'r15'});toast('DRAMロードを注入','ROBの先頭に来ると退役が止まる','#ef4444')}
+  if(k==='storm'){for(let i=0;i<24;i++)SIM.injectQ.push({type:'ld',asm:`mov r15, [rand_${i}]`,pc:pc+i*4,addr:0xA0000000+Math.floor(Math.random()*(1<<24))*64});toast('ミスの嵐','独立したDRAMロード24本 · MABが埋まる','#ef4444')}
+  if(k==='nuke')nuke();
+  if(k==='wbinvd'){[L1I,L1D,L2,L3,OPC].forEach(c=>c.flush());SIM.inflight.clear();logEv('SYS','全キャッシュとOp Cacheを消去','#7c5cf6',true);toast('全キャッシュ消去','L1I・L1D・L2・L3・Op Cacheが空になった','#7c5cf6')}
+  if(k==='tlb'){[DTLB1,DTLB2,ITLB1,ITLB2].forEach(c=>c.flush());logEv('SYS','TLBを消去','#7c5cf6',true);toast('TLB消去','ページテーブルを切り替えた直後の状態','#7c5cf6')}
+  if(k==='bp'){BP.reset();logEv('SYS','分岐予測器・BTB・RASを初期化','#7c5cf6',true);toast('分岐予測器リセット','学習結果がすべて消えた','#7c5cf6')}
+  if(k==='ucode'){SIM.injectQ.push({type:'alu',asm:'cpuid',pc,ucode:40});toast('μcode命令を注入','cpuid · 40 micro-ops','#0ea5c6')}
+});
+// toasts & log
+function toast(t,s,c){const d=document.createElement('div');d.className='toast';d.style.setProperty('--c',c);d.innerHTML=`${t}<small>${s}</small>`;const box=$('#toasts');box.appendChild(d);
+  while(box.children.length>3)box.firstChild.remove();setTimeout(()=>{d.classList.add('out');setTimeout(()=>d.remove(),400)},2600)}
+const LOG=[];let logLast={t:'',n:0,el:null,w:0};
+function logEv(tag,msg,col,force){
+  if(!V.enabled)return;
+  if(logLast.t===tag+msg&&logLast.el){logLast.n++;logLast.el.querySelector('.n').textContent=` ×${logLast.n}`;return}
+  if(!force&&NOW-logLast.w<.15)return;logLast.w=NOW;
+  const d=document.createElement('div');d.innerHTML=`<span class="c">${String(SIM.cycle).padStart(7,' ')}</span><span class="t" style="color:${col}">${tag}</span>${msg}<span class="n" style="color:var(--fa)"></span>`;
+  const L=$('#log');L.prepend(d);while(L.children.length>60)L.lastChild.remove();logLast={t:tag+msg,n:1,el:d,w:NOW};
+}
+// gauges
+const GA=[['L1I',()=>L1I.ema,'#e8930c'],['OPC',()=>CFG.opcache?OPC.ema:-1,'#4f6bf5'],['L1D',()=>L1D.ema,'#10b981'],['L2',()=>L2.ema,'#06b6d4'],['L3',()=>L3.ema,'#8b5cf6'],['DTLB',()=>DTLB1.ema<0?-1:DTLB1.ema,'#a855f7'],['BTB',()=>BP.btbA?BP.btbH/BP.btbA:-1,'#eab308'],['BR',()=>BP.cond?1-BP.misp/BP.cond:-1,'#e5484d']];
+const gEl=$('#gauges');const R=24,CIRC=2*Math.PI*R;
+GA.forEach(([n,,c])=>{const d=document.createElement('div');d.className='gauge';
+  d.innerHTML=`<svg viewBox="0 0 62 62"><circle cx="31" cy="31" r="${R}" fill="none" stroke="#d3d9e3" stroke-width="7"/><circle class="fg" cx="31" cy="31" r="${R}" fill="none" stroke="${c}" stroke-width="7" stroke-linecap="round" stroke-dasharray="0 ${CIRC}" transform="rotate(-90 31 31)" style="transition:stroke-dasharray .4s;filter:drop-shadow(0 0 3px ${c}88)"/><text x="31" y="35" text-anchor="middle" font-family="JetBrains Mono" font-weight="700" font-size="11.5" fill="#2d3445">—</text></svg><div class="l">${n}</div>`;gEl.appendChild(d)});
+// occupancy
+const OC=[['MOQ',()=>SIM.fePipe.length,MOQ_CAP],['ROB',()=>SIM.rob.length,ROB_CAP],['NSQ',()=>SIM.nsq.length,NSQ_CAP],['LOAD Q',()=>SIM.lq,LQ_CAP],['STORE Q',()=>SIM.sq,SQ_CAP],['L2 MAB',()=>SIM.mab2,L2MAB_CAP],['L3 MAB',()=>SIM.mab3,L3MAB_CAP]];
+const oEl=$('#occs');
+OC.forEach(([n])=>{const d=document.createElement('div');d.className='occ';d.innerHTML=`<span>${n}</span><div class="tr"><div class="fl"></div></div><span class="vv"></span>`;oEl.appendChild(d)});
+const mini=document.createElement('div');mini.className='occ mini';mini.innerHTML='<span>INT SCHED</span>'+[0,1,2,3,4,5].map(()=>'<div class="tr"><div class="fl"></div></div>').join('')+'<span class="vv"></span>';oEl.appendChild(mini);
+const mini2=document.createElement('div');mini2.className='occ mini';mini2.style.gridTemplateColumns='78px repeat(3,1fr) 30px';mini2.innerHTML='<span>FP SCHED</span>'+[0,1,2].map(()=>'<div class="tr"><div class="fl"></div></div>').join('')+'<span class="vv"></span>';oEl.appendChild(mini2);
+const occCol=f=>f<.5?'linear-gradient(90deg,#6ee7b7,#10b981)':f<.85?'linear-gradient(90deg,#fcd34d,#f59e0b)':'linear-gradient(90deg,#fca5a5,#ef4444)';
+// top-down
+const TD=[['ret','Retiring','#22c55e'],['bad','Bad Speculation','#ef4444'],['fe','Frontend Bound','#f59e0b'],['be','Backend Bound','#4f6bf5']];
+$('#tdbar').innerHTML=TD.map(([k,,c])=>`<div data-k="${k}" style="background:${c};flex:1 1 0"></div>`).join('');
+$('#tdl').innerHTML=TD.map(([k,n,c])=>`<div><i style="background:${c}"></i>${n}<b data-v="${k}">0%</b></div>`).join('');
+// ports
+const pEl=$('#ports');[...UNITS.map(u=>[u.lbl,'#ffb04a']),...FUNITS.map(u=>[u.lbl,'#ec4899'])].forEach(([l,c])=>{const d=document.createElement('div');d.className='port';d.innerHTML=`<div class="tr"><div class="fl" style="background:linear-gradient(0deg,${c},${c}99)"></div></div><div class="l">${l}</div>`;pEl.appendChild(d)});
+// cache tabs
+const CT=[['L1D',L1D],['L1I',L1I],['OPC',OPC],['L2',L2],['L3',L3],['TLB',null]];let cTab='L1D';
+const ctEl=$('#cTabs');CT.forEach(([n])=>{const b=document.createElement('button');b.className='btn'+(n===cTab?' on':'');b.textContent=n;b.onclick=()=>{cTab=n;ctEl.querySelectorAll('.btn').forEach(x=>x.classList.toggle('on',x===b))};ctEl.appendChild(b)});
+
+/* tooltip */
+const INFO={
+ bp:['分岐予測器','L1 BTB 16K · L2 BTB 8K · Return Stack 64','フェッチより先に次のアドレスを予測する。このモデルはTAGE系の予測器で、4096エントリのbimodalを土台に、履歴長が5、11、23、47、97ビットのタグ付きテーブル5本を重ねる。最も長い履歴で一致したテーブルが予測を担当する。'],
+ fq:['Fetch Queue','','予測したフェッチアドレスを並べ、ITLBとL1Iの参照を待つ。'],
+ itlb:['ITLB','L1 64エントリ · L2 2048エントリ','命令フェッチの仮想アドレスを物理アドレスに変換する。'],
+ l1i:['L1命令キャッシュ','32KB · 8-way · 64セット','Op Cacheに無い命令バイト列を供給する。2系統でそれぞれ1サイクル32バイトを読み出す。'],
+ iq0:['Instruction Queue','','L1Iから読んだ命令バイト列をデコーダの前で溜める。'],iq1:['Instruction Queue','','L1Iから読んだ命令バイト列をデコーダの前で溜める。'],
+ dec0:['4-Way Decode','1サイクル4命令','x86命令をmacro-opに変換する。このモデルの既定では1スレッドが片方のクラスタだけを使う。'],dec1:['4-Way Decode','1サイクル4命令','2つ目のデコードクラスタ。グローバル設定のデコード8-wideで1スレッドから両方を使える。'],
+ ucode:['Microcode ROM','MSROM','複雑な命令を一連のmicro-opとして1サイクル4個ずつ供給する。'],
+ opc:['Op Cache','6.75Kエントリ · 16-way','デコード済みのmicro-opを保持し、1サイクル最大9個を供給する。このモデルではコード32KB分を保持する近似を使う。'],
+ moq:['Micro-Op Queue','96エントリと仮定','フロントエンドとRenameの間の緩衝。上面のLEDの明るいものがRenameに進める状態。'],
+ ren:['Rename / Dispatch','8-wide · Zeroing Idioms · Move Elimination','1サイクル最大8個のmacro-opに物理レジスタを割り当て、ROBとスケジューラに送る。ゼロ化イディオムとレジスタ間movはここで完了する。'],
+ rat:['Register Alias Tables','','アーキテクチャレジスタと物理レジスタの対応表。退役した命令の結果で確定版を更新する。'],
+ rob:['Reorder Buffer','576エントリ · 1サイクル8個退役','命令をプログラム順に保持する循環バッファ。上面の576個のセルが各エントリで、緑の円錐が先頭、青の円錐が末尾を指す。'],
+ nsq:['Non-Scheduling Queue','96エントリ','FPスケジューラが満杯の時に浮動小数点命令を待たせる。'],
+ irf:['Integer Register File','288エントリ','整数の物理レジスタ。'],frf:['FP Register File','384エントリ × 512bit','ベクトルと浮動小数点の物理レジスタ。'],
+ lsu:['Load Store Unit','','ロードとストアの順序を管理する。'],lq:['Load Queue','288エントリ','ディスパッチ済みで退役前のロード。セルの色は、実行中ならデータの供給元を表す。'],
+ sq:['Store Queue','128エントリ','ストアのアドレスとデータを退役まで保持し、同じアドレスを読む後続ロードへ値を転送する。'],
+ dtlb:['DTLB','L1 96エントリ · L2 4096エントリ','データアクセスのアドレス変換。L2もミスするとページウォークに30サイクルかかると仮定している。'],
+ l1d:['L1データキャッシュ','48KB · 12-way · 64セット · 4サイクル','1サイクルに256bit以下のロード4本か512bitロード2本、ストア2本を処理する。'],
+ l2:['L2キャッシュ','1MB · 16-way','このモデルでは14サイクル。'],l2mab:['L2 Miss Address Buffer','127エントリ','L2をミスしてL3以遠へ出ているリクエスト。'],
+ l3:['L3キャッシュ','48MB · 16-way','このモデルでは50サイクル。'],l3mab:['L3 Miss Address Buffer','480エントリ','DRAMへ出ているリクエスト。'],
+ dram:['Infinity Fabric / DRAM','96〜128バイト/サイクル','このモデルの既定レイテンシは320サイクル、帯域は1ライン3サイクルと仮定している。'],
+};
+for(let k=0;k<6;k++)INFO['is'+k]=['Int Scheduler '+k,'24エントリ',`オペランドが揃った命令を、担当する${SCHED_UNITS[k].map(u=>u.lbl).join('と')}に発行する。明るく背の高いセルが発行可能な命令。`];
+for(let k=0;k<3;k++)INFO['fs'+k]=['FP Scheduler '+k,'46エントリ',`${FS_UNITS[k].map(u=>u.lbl).join('と')}に発行する。`];
+for(const u of UNITS)INFO[u.id]=[u.lbl+' · 整数パイプ '+u.i,u.caps.join(' · '),u.caps.includes('div')?'除算器はパイプライン化されておらず、このモデルでは14サイクル占有される。':u.caps.includes('agu')?'ロードとストアのアドレスを計算する。':'1サイクルで結果を返す整数演算パイプ。'];
+for(const u of FUNITS)INFO[u.id]=[u.lbl+' · FPパイプ '+u.i,u.caps.join(' · '),u.caps.includes('fma')?'FMAは4サイクル、FMULは3サイクルと仮定。':u.caps.includes('fadd')?'FADDは2サイクルと仮定。':'FPストアデータとFPから整数への移動を扱う。'];
+function live(id){
+  const c=SIM.cycle;const pct=v=>v<0?'—':(v*100).toFixed(1)+'%';
+  if(id==='bp')return`条件分岐 ${BP.cond} · ミス ${BP.misp} · 精度 ${BP.cond?pct(1-BP.misp/BP.cond):'—'}<br>BTB L1 ${BP.l1.size} / 16384 · RAS ${BP.rasCnt}/64 · 溢れ ${BP.rasOv}`;
+  if(id==='opc')return`ヒット率 ${pct(OPC.ema)} · 保持ライン ${OPC.valid}/${OPC.sets*OPC.ways}`;
+  if(id==='l1i')return`ヒット率 ${pct(L1I.ema)} · ミス ${L1I.miss}`;
+  if(id==='l1d')return`ヒット率 ${pct(L1D.ema)} · ミス ${L1D.miss} · 追い出し ${L1D.evicts}`;
+  if(id==='l2')return`ヒット率 ${pct(L2.ema)} · 保持 ${L2.valid}/${L2.sets*L2.ways}`;
+  if(id==='l3')return`ヒット率 ${pct(L3.ema)} · 保持 ${fmtN(L3.valid)}/${fmtN(L3.sets*L3.ways)}`;
+  if(id==='rob'){const h=SIM.rob[0];return`占有 ${SIM.rob.length}/${ROB_CAP}`+(h?`<br>先頭 #${h.id} ${h.asm} · ${h.done?'完了':h.tI>=0?`実行中 残り${Math.max(0,h.doneCycle-c)}cyc`:'発行待ち'}`:'')}
+  if(id==='moq')return`占有 ${SIM.fePipe.length}/${MOQ_CAP}`;
+  if(id.startsWith('is'))return`占有 ${SIM.intS[+id[2]].length}/${IS_CAP}`;
+  if(id.startsWith('fs'))return`占有 ${SIM.fpS[+id[2]].length}/${FS_CAP}`;
+  if(id==='nsq')return`占有 ${SIM.nsq.length}/${NSQ_CAP}`;
+  if(id==='lq')return`占有 ${SIM.lq}/${LQ_CAP} · 転送 ${SIM.stats.stlf}`;
+  if(id==='sq')return`占有 ${SIM.sq}/${SQ_CAP}`;
+  if(id==='dtlb')return`L1ヒット率 ${pct(DTLB1.ema)} · ページウォーク ${SIM.stats.walks}`;
+  if(id==='l2mab')return`使用中 ${SIM.mab2}/${L2MAB_CAP}`;if(id==='l3mab')return`使用中 ${SIM.mab3}/${L3MAB_CAP}`;
+  if(id==='dram')return`DRAMリクエスト ${SIM.stats.dram} · プリフェッチ ${SIM.stats.pf}`;
+  const u=UNITS.find(u=>u.id===id);if(u)return`稼働率 ${(SIM.uUtil[u.i]*100).toFixed(0)}%`;
+  const f=FUNITS.find(u=>u.id===id);if(f)return`稼働率 ${(SIM.fUtil[f.i]*100).toFixed(0)}%`;
+  return'';
+}
+const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();let hoverId=null,mx=0,my=0;
+renderer.domElement.addEventListener('pointermove',e=>{const r=renderer.domElement.getBoundingClientRect();mouse.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);mx=e.clientX;my=e.clientY;
+  ray.setFromCamera(mouse,camera);const h=ray.intersectObjects(PICK,false)[0];let id=null;if(h){let o=h.object;while(o&&!o.userData.id)o=o.parent;id=o&&o.userData.id}hoverId=id;renderTip()});
+renderer.domElement.addEventListener('pointerleave',()=>{hoverId=null;renderTip()});
+renderer.domElement.addEventListener('dblclick',()=>{if(hoverId)flyToBlock(hoverId)});
+function renderTip(){const t=$('#tip');if(!hoverId||!INFO[hoverId]){t.style.display='none';renderer.domElement.style.cursor='';return}
+  renderer.domElement.style.cursor='pointer';const [h,s,d]=INFO[hoverId];const lv=live(hoverId);
+  t.innerHTML=`<div class="h">${h}</div>${s?`<div class="s">${s}</div>`:''}<div class="d">${d}</div>${lv?`<div class="live">${lv}</div>`:''}`;
+  t.style.display='block';const w=t.offsetWidth,hh=t.offsetHeight;t.style.left=Math.min(innerWidth-w-10,mx+18)+'px';t.style.top=Math.min(innerHeight-hh-10,my+14)+'px'}
+
+/* about modal */
+$('#bAbout').onclick=()=>{$('#modal').style.display='grid'};$('#modal').onclick=e=>{if(e.target.id==='modal')$('#modal').style.display='none'};
+$('#mbox').innerHTML=`<h2>このシミュレータのモデル</h2><p>添付のZen 6ファミリーのブロック図にある構造と数値を3D空間に配置し、その上で簡略化したサイクル単位のパイプラインモデルを動かしている。命令はシナリオごとの擬似プログラムから生成し、フェッチ、デコード、Rename、ディスパッチ、発行、実行、完了、退役の各段を1サイクルずつ進める。図に無い値はZen 5までの公開情報を参考にした仮定値で、実機の性能を予測する用途には向かない。</p>
+<h4>図の値をそのまま使った項目</h4>
+<table><caption>表1 図から採用した構造の容量と幅、スラッシュ区切りの値は先頭を採用</caption><tr><th>構造</th><th>値</th></tr>
+<tr><td>Reorder Buffer</td><td>576エントリ、Rename/Dispatch 8-wide</td></tr><tr><td>Int Scheduler</td><td>24エントリ × 6、実行ユニット12本</td></tr>
+<tr><td>Non-Scheduling Queue / FP Scheduler</td><td>96エントリ / 46エントリ × 3、FPパイプ6本</td></tr><tr><td>Load Queue / Store Queue</td><td>288 / 128エントリ</td></tr>
+<tr><td>L1I / L1D</td><td>32KB 8-way / 48KB 12-way 4サイクル</td></tr><tr><td>L2 / L3</td><td>1MB 16-way / 48MB 16-way</td></tr>
+<tr><td>DTLB / ITLB</td><td>96+4096 / 64+2048エントリ</td></tr><tr><td>BTB / Return Stack</td><td>16K+8K / 64エントリ</td></tr><tr><td>Op Cache供給幅</td><td>1サイクル9 micro-op</td></tr><tr><td>L2 MAB / L3 MAB</td><td>127 / 480エントリ</td></tr></table>
+<h4>このモデルで仮定した値</h4>
+<table><caption>表2 図に記載が無く、このモデルで仮定した値</caption><tr><th>項目</th><th>仮定</th></tr>
+<tr><td>レイテンシ</td><td>ALU 1、MUL 3、DIV 14で非パイプライン、FMA 4、FMUL 3、FADD 2、L2 14、L3 50、DRAM 320サイクル</td></tr>
+<tr><td>フロントエンドの深さ</td><td>Op Cache経路4サイクル、デコード経路7サイクル、リダイレクト3サイクル</td></tr>
+<tr><td>Micro-Op Queue</td><td>96エントリ</td></tr><tr><td>Op Cache</td><td>32セット × 16-way、64バイトのコードライン単位で近似</td></tr>
+<tr><td>デコード幅</td><td>1スレッドで4命令/サイクル。設定で8に変更できる</td></tr>
+<tr><td>分岐予測器</td><td>TAGE系。4096エントリのbimodalと、履歴長5、11、23、47、97ビット、各1024エントリ、9ビットタグのテーブル5本。テーブル数、容量、履歴長は実機とは異なる</td></tr>
+<tr><td>プリフェッチャ</td><td>L1Dのストライド検出、最大64ライン先まで</td></tr><tr><td>DRAM帯域</td><td>1ラインあたり3サイクル</td></tr>
+<tr><td>ページウォーク</td><td>DTLB L2ミス時に30サイクル</td></tr><tr><td>ストア転送</td><td>成功時7サイクル。失敗時はストアの退役を待ち、さらに22サイクル</td></tr></table>
+<h4>画面の読み方</h4><ul><li>粒子の色は命令の種類を表す。灰色は予測ミスの後ろで投機実行された命令。</li><li>立方体はキャッシュラインの移動を表す。色は供給元で、水色はプリフェッチ。</li><li>ROBの上面のセルは576エントリそれぞれを表す。背が高いセルは実行中、緑は完了して退役待ち、赤は予測ミスした分岐。</li><li>Branch Predictor Labの予測ログの提供元は、Bがbimodal、T1〜T5がタグ付きテーブル。*は、担当テーブルのエントリが新しく確信が弱いので、1段短いテーブルの予測を代わりに使ったことを表す。</li><li>L1D、L2、L3は、wayの数だけ積み重なった板として描いている。ヒットしたwayの板が緑、埋めたwayが青、追い出したwayが橙に光る。</li><li>Top-downはディスパッチの8スロットを、Retiring、Bad Speculation、Frontend Bound、Backend Boundの4つに分類した比率。</li></ul>
+<p style="color:var(--mu);margin-top:16px">ショートカット Space 再生と停止 · → 1サイクル · R リセット · F 追跡 · S 計測を記録 · T ツアー · 1〜0 シナリオ</p>`;
+
+/* ============================================================
+   10. 2D panels
+   ============================================================ */
+function fitCanvas(cv){const r=cv.getBoundingClientRect();const d=Math.min(2,devicePixelRatio||1);const w=Math.max(1,Math.round(r.width*d)),h=Math.max(1,Math.round(r.height*d));
+  if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}const g=cv.getContext('2d');g.setTransform(d,0,0,d,0,0);g.clearRect(0,0,r.width,r.height);return[g,r.width,r.height]}
+const mono=(s,w=600)=>`${w} ${s}px "JetBrains Mono",monospace`;
+const CNT=['#dfe4ec','#b7c6f3','#f8d27e','#f29a2e'];
+const BCOL=['#3355c8','#93a8f0','#f9c45a','#e06d10'];
+const TCOLS=['#8b93a7','#3b82f6','#10b981','#d4a106','#f97316','#ef4444'];
+const CTRC=['#3355c8','#5b79e0','#93a8f0','#c9d3f6','#fbe3a0','#f9c45a','#f39a2b','#e06d10'];
+function drawBP(){
+  const [g,W,H]=fitCanvas($('#bpc'));g.textBaseline='top';g.textAlign='left';
+  const rasW=46,LW=W-rasW-10;
+  g.font=mono(9,700);g.fillStyle='#768096';g.fillText('GHR · 新しい順 → · 色付きの目盛りが各テーブルの履歴長',0,0,LW);
+  const per=50,cw=LW/per;
+  for(let i=0;i<100;i++){const v=BP.hist[i];const x=(i%per)*cw,y=12+Math.floor(i/per)*9;g.fillStyle=v===undefined?'#e1e6ee':v?'#22c55e':'#94a3b8';g.fillRect(x+.5,y,Math.max(1,cw-1),7)}
+  TAGE_L.forEach((L,k)=>{const i=L-1;const x=(i%per+1)*cw,y=12+Math.floor(i/per)*9;g.fillStyle=TCOLS[k+1];g.fillRect(x-1.5,y-2,2.5,11)});
+  const top=34,gap=8,AW=LW*.56,AH=H-top;const gs=Math.max(18,Math.min((AW-2*gap)/3,(AH-2*15-gap)/2));
+  for(let k=0;k<6;k++){const cx=(k%3)*(gs+gap),cy=top+Math.floor(k/3)*(gs+15+gap);
+    g.font=mono(8.5,700);g.fillStyle=TCOLS[k];g.fillText(k?`T${k} · ${TAGE_L[k-1]}bit`:'BASE · 4K',cx,cy,gs);
+    g.fillStyle='#dde2ea';g.fillRect(cx,cy+10,gs,3);g.fillStyle=TCOLS[k];g.fillRect(cx,cy+10,gs*Math.min(1,BP.prov[k]),3);
+    const gy=cy+15;g.fillStyle='#d3d9e3';g.fillRect(cx-1,gy-1,gs+2,gs+2);
+    if(k===0){const c=gs/64;for(let i=0;i<4096;i++){let col=BCOL[BP.base[i]];const a=NOW-BP.bT[i];if(a<.6)col=BP.bK[i]===2?'#ef4444':'#ffffff';g.fillStyle=col;g.fillRect(cx+(i&63)*c,gy+(i>>6)*c,Math.max(.8,c-.25),Math.max(.8,c-.25))}}
+    else{const t=BP.T[k-1],c=gs/32;for(let i=0;i<1024;i++){let col=t.tag[i]<0?'#e9edf3':CTRC[t.ctr[i]];const a=NOW-t.cT[i];if(a<.7)col=t.cK[i]===2?'#ef4444':t.cK[i]===3?'#16a34a':'#ffffff';g.fillStyle=col;g.fillRect(cx+(i&31)*c,gy+(i>>5)*c,Math.max(.8,c-.4),Math.max(.8,c-.4))}}
+    if(BP.lastProv===k-1){g.strokeStyle=TCOLS[k];g.lineWidth=2;g.strokeRect(cx-1.5,gy-1.5,gs+3,gs+3)}}
+  const lx=3*(gs+gap)+2,lw=LW-lx;g.font=mono(9,700);g.fillStyle='#768096';g.fillText('予測ログ · 提供元',lx,top,lw);
+  g.font=mono(9.5,600);BP.last.forEach((l,i)=>{const y=top+13+i*12.5;g.fillStyle=l.ok?'#16a34a':'#e5484d';g.fillText(l.ok?'✓':'✗',lx,y);
+    g.fillStyle=TCOLS[l.prov+1];g.fillText((l.prov<0?'B ':'T'+(l.prov+1))+(l.alt?'*':''),lx+11,y);g.fillStyle='#2d3445';let a=l.asm;const mw=lw-40;while(a.length>3&&g.measureText(a).width>mw)a=a.slice(0,-1);g.fillText(a,lx+38,y)});
+  const sy=top+13+8*12.5+3;g.font=mono(10,700);g.fillStyle='#2d3445';g.fillText(`精度 ${BP.cond?(100*(1-BP.misp/BP.cond)).toFixed(2)+'%':'—'}`,lx,sy,lw);
+  g.font=mono(9,600);g.fillStyle='#768096';g.fillText(`cond ${fmtN(BP.cond)} · miss ${fmtN(BP.misp)}`,lx,sy+13,lw);g.fillText(`割当 ${BP.T.map(t=>t.alloc).join('/')}`,lx,sy+25,lw);g.fillText(`ret ${BP.retN} · miss ${BP.retMisp}`,lx,sy+37,lw);
+  const rx=W-rasW+2,rh=(H-14)/32;g.font=mono(9,700);g.fillStyle='#768096';g.fillText('RAS',rx+8,0);
+  for(let i=0;i<64;i++){const col=Math.floor(i/32),row=31-(i%32);const x=rx+col*22,y=12+row*rh;const age=NOW-BP.rasEvt[i];
+    const inStack=((BP.rasTop-i+64)%64)<BP.rasCnt;g.fillStyle=inStack?'#a5b4fc':'#e1e6ee';if(age<.4)g.fillStyle=BP.rasEvK[i]===1?'#4f6bf5':'#22c55e';
+    g.fillRect(x,y,20,Math.max(1,rh-1));if(i===BP.rasTop){g.strokeStyle='#e5484d';g.lineWidth=1.5;g.strokeRect(x-.5,y-.5,21,rh)}}
+  $('#bpR').textContent=`TAGE 5表 · RAS ${BP.rasCnt}/64 · 溢れ${BP.rasOv}`;
+}
+const EVC=[null,'#22c55e','#ef4444','#3b82f6','#f97316','#22d3ee'];
+const imgCache={};let cmH=null;
+$('#cmc').addEventListener('mousemove',e=>{const r=e.currentTarget.getBoundingClientRect();cmH={x:e.clientX-r.left,y:e.clientY-r.top}});$('#cmc').addEventListener('mouseleave',()=>cmH=null);
+function drawCache(){
+  const [g,W,H]=fitCanvas($('#cmc'));g.textBaseline='top';
+  if(cTab==='TLB'){drawTLB(g,W,H);return}
+  const c=CT.find(x=>x[0]===cTab)[1];const pct=c.ema<0?'—':(c.ema*100).toFixed(1)+'%';
+  g.font=mono(10,700);g.fillStyle='#2d3445';g.fillText(`${c.name} · ${c.sets}セット × ${c.ways}way · ヒット率 ${pct}`,0,0);
+  g.font=mono(9,600);g.fillStyle='#768096';g.fillText(`hit ${fmtN(c.hits)} · miss ${fmtN(c.miss)} · evict ${fmtN(c.evicts)} · valid ${fmtN(c.valid)}/${fmtN(c.sets*c.ways)}`,0,14);
+  const top=30,h=H-top-16;let info='';
+  if(c.sets*c.ways<=1024){
+    const cw=W/c.sets,ch=h/c.ways;
+    for(let s=0;s<c.sets;s++){const sa=NOW-c.st[s];if(sa<.5&&c.sk[s]===EV.MISS){g.fillStyle=`rgba(239,68,68,${.35*(1-sa/.5)})`;g.fillRect(s*cw,top,cw,h)}
+      for(let w=0;w<c.ways;w++){const i=s*c.ways+w;let col=c.tag[i]<0?'#e4e8ef':'#b9c5ef';const a=NOW-c.ct[i];
+        g.globalAlpha=1;g.fillStyle=col;g.fillRect(s*cw+.6,top+w*ch+.6,cw-1.2,ch-1.2);
+        if(a<.6&&c.ck[i]){g.globalAlpha=1-a/.6;g.fillStyle=EVC[c.ck[i]];g.fillRect(s*cw+.6,top+w*ch+.6,cw-1.2,ch-1.2)}}}
+    g.globalAlpha=1;
+    if(cmH&&cmH.y>=top&&cmH.y<top+h){const s=Math.floor(cmH.x/cw),w=Math.floor((cmH.y-top)/ch);if(s>=0&&s<c.sets&&w>=0&&w<c.ways){const i=s*c.ways+w,t=c.tag[i];g.strokeStyle='#2d3445';g.lineWidth=1.5;g.strokeRect(s*cw,top+w*ch,cw,ch);g.strokeStyle='#4f6bf588';g.strokeRect(s*cw,top,cw,h);
+      info=`set ${s} · way ${w} · ${t<0?'空き':'line '+hx(t*64)+' · 最終更新 '+(NOW-c.ct[i]).toFixed(1)+'秒前'}`}}
+  }else{
+    const cols=c.sets===1024?64:256,rows=Math.ceil(c.sets/cols);const key=c.name;
+    let im=imgCache[key];if(!im){const cv=document.createElement('canvas');cv.width=cols;cv.height=rows;im=imgCache[key]={cv,ctx:cv.getContext('2d'),id:null};im.id=im.ctx.createImageData(cols,rows)}
+    const d=im.id.data;const base=[228,232,239],full=[129,140,248];
+    for(let s=0;s<c.sets;s++){const f=c.vc[s]/c.ways;let r=base[0]+(full[0]-base[0])*f,gg=base[1]+(full[1]-base[1])*f,b=base[2]+(full[2]-base[2])*f;
+      const a=NOW-c.st[s];if(a<.8&&c.sk[s]){const e=EVC[c.sk[s]];const k=1-a/.8;const er=parseInt(e.slice(1,3),16),eg=parseInt(e.slice(3,5),16),eb=parseInt(e.slice(5,7),16);r+=(er-r)*k;gg+=(eg-gg)*k;b+=(eb-b)*k}
+      const o=s*4;d[o]=r;d[o+1]=gg;d[o+2]=b;d[o+3]=255}
+    im.ctx.putImageData(im.id,0,0);g.imageSmoothingEnabled=false;g.drawImage(im.cv,0,top,W,h);
+    if(cmH&&cmH.y>=top&&cmH.y<top+h){const cx=Math.floor(cmH.x/W*cols),cy=Math.floor((cmH.y-top)/h*rows),s=cy*cols+cx;if(s<c.sets){g.strokeStyle='#2d3445';g.lineWidth=1.5;g.strokeRect(cx*W/cols-1,top+cy*h/rows-1,W/cols+2,h/rows+2);info=`set ${s} · 有効 ${c.vc[s]}/${c.ways} way`}}
+  }
+  const lg=[['hit','#22c55e'],['miss','#ef4444'],['fill','#3b82f6'],['evict','#f97316'],['prefetch','#22d3ee'],['valid','#b9c5ef']];
+  if(info){g.font=mono(9.5,700);g.fillStyle='#2d3445';g.fillText(info,0,H-12);return}
+  g.font=mono(9,600);let x=0;for(const [n,cc] of lg){g.fillStyle=cc;g.fillRect(x,H-10,8,8);g.fillStyle='#768096';g.fillText(n,x+11,H-11);x+=g.measureText(n).width+24}
+}
+function drawTLB(g,W,H){
+  g.font=mono(10,700);g.fillStyle='#2d3445';g.fillText(`DTLB L1 96 · ヒット率 ${DTLB1.ema<0?'—':(DTLB1.ema*100).toFixed(1)+'%'} · ${CFG.huge?'2MB':'4KB'}ページ · walk ${SIM.stats.walks}`,0,0);
+  const cw=W/48;for(let i=0;i<96;i++){const x=(i%48)*cw,y=16+Math.floor(i/48)*16;g.fillStyle=DTLB1.tag[i]<0?'#e4e8ef':'#c4b5fd';const a=NOW-DTLB1.ct[i];if(a<.5&&DTLB1.ck[i])g.fillStyle=EVC[DTLB1.ck[i]];g.fillRect(x+.6,y,cw-1.2,14)}
+  g.font=mono(9,700);g.fillStyle='#768096';g.fillText(`DTLB L2 4096 · 256セット × 16way · ヒット率 ${DTLB2.ema<0?'—':(DTLB2.ema*100).toFixed(1)+'%'}`,0,52);
+  const top=66,h=H-top-4,cw2=W/128,ch=h/32;
+  for(let i=0;i<4096;i++){const x=(i%128)*cw2,y=top+Math.floor(i/128)*ch;g.fillStyle=DTLB2.tag[i]<0?'#e4e8ef':'#c4b5fd';const a=NOW-DTLB2.ct[i];if(a<.5&&DTLB2.ck[i])g.fillStyle=EVC[DTLB2.ck[i]];g.fillRect(x,y,Math.max(1,cw2-.5),Math.max(1,ch-.5))}
+}
+let traceOps=[];
+function drawTrace(){
+  const [g,W,H]=fitCanvas($('#trc'));const c=SIM.cycle,win=64;const rows=Math.floor((H-36)/14.5);
+  const head=SIM.rob[0];let st=SIM.trace.length-rows;if(head){const hi=SIM.trace.findIndex(o=>o.id>=head.id-3);if(hi>=0)st=Math.min(hi,st)}st=Math.max(0,st);
+  const ops=SIM.trace.slice(st,st+rows);traceOps=ops;const tx0=Math.min(290,W*.56),tw=W-tx0-4;const X=cy=>tx0+clamp((cy-(c-win))/win,0,1)*tw;
+  g.textBaseline='middle';g.font=mono(9,700);g.fillStyle='#768096';g.fillText('#ID',0,6);g.fillText('PC',40,6);g.fillText('命令',96,6);
+  for(let k=0;k<=win;k+=16){const x=X(c-win+k);g.fillStyle='#c9cfda';g.fillRect(x,12,1,H-14);g.fillStyle='#a5adbf';g.fillText(String(c-win+k),x+2,6)}
+  ops.forEach((op,i)=>{const y=20+i*14.5;
+    if(op.id===V.followId){g.fillStyle='#dbe3ff';g.fillRect(0,y-2,W,13)}
+    g.font=mono(9.5,600);g.fillStyle=op.wrong?'#a5adbf':'#768096';g.fillText(String(op.id%100000),0,y+4.5);g.fillText(hx(op.pc).slice(-6),40,y+4.5);
+    g.fillStyle=op.flushed?'#e5484d':op.wrong?'#a5adbf':'#2d3445';const asm=op.asm.length>26?op.asm.slice(0,25)+'…':op.asm;g.fillText(asm,96,y+4.5);
+    if(op.flushed){g.fillStyle='#e5484d';g.fillRect(96,y+4.5,g.measureText(asm).width,1)}
+    const end=op.tX>=0?op.tX:op.tR>=0?op.tR:c;
+    const seg=(a,b,col)=>{if(a<0)return;const bb=b<0?end:b;if(bb<c-win)return;const x0=X(a),x1=X(Math.max(a+.6,bb));g.fillStyle=col;rr(g,x0,y,Math.max(2,x1-x0),9,3);g.fill()};
+    seg(op.tF,op.tD,op.wrong?'#e1e5ec':'#fde68a');seg(op.tD,op.tI,op.wrong?'#dfe3ea':'#c7d6fb');
+    seg(op.tI,op.tC,op.wrong?'#b8bfcb':(op.type==='ld'&&LVLCOL[op.lvl])||TCOL[op.type]);seg(op.tC,op.tR,op.wrong?'#d5d9e1':'#bbf7d0');
+    if(op.tR>=0){g.fillStyle='#16a34a';g.fillText('✓',X(op.tR)+2,y+4.5)}
+    if(op.tX>=0){g.fillStyle='#e5484d';g.fillText('✗',X(op.tX)+2,y+4.5)}
+    if(op.mispredict&&!op.wrong){g.fillStyle='#e5484d';g.beginPath();g.arc(tx0-6,y+4.5,3,0,7);g.fill()}
+    if(head&&op.id===head.id){g.fillStyle='#16a34a';rr(g,-2,y-2,4,13,2);g.fill()}
+  });
+  const ly=H-8;let lx=0;g.font=mono(8.5,600);g.textBaseline='middle';
+  for(const [n,col] of [['フロントエンド','#fde68a'],['発行待ち','#c7d6fb'],['実行','#3b82f6'],['退役待ち','#bbf7d0'],['✓退役',null],['✗破棄',null],['●予測ミス',null]]){
+    if(col){g.fillStyle=col;rr(g,lx,ly-4,14,8,3);g.fill();lx+=17}g.fillStyle=n[0]==='✗'||n[0]==='●'?'#e5484d':n[0]==='✓'?'#16a34a':'#768096';g.fillText(n,lx,ly);lx+=g.measureText(n).width+10}
+}
+function drawSlots(){
+  const [g,W,H]=fitCanvas($('#slots'));const n=SIM.slotHist.length;const cols=120,cw=W/cols,ch=H/8;const COL=['#22c55e','#ef4444','#f59e0b','#4f6bf5'];
+  g.fillStyle='#dde2ea';g.fillRect(0,0,W,H);
+  for(let k=0;k<Math.min(cols,n);k++){const row=SIM.slotHist[n-1-k];const x=W-(k+1)*cw;for(let s=0;s<8;s++){g.fillStyle=COL[row[s]];g.globalAlpha=row[s]===0?.95:.75;g.fillRect(x+.4,s*ch+.4,cw-.8,ch-.8)}}g.globalAlpha=1;
+}
+const ipcHist=[];
+function drawSpark(){const [g,W,H]=fitCanvas($('#spark'));if(ipcHist.length<2)return;const mx=8;g.beginPath();ipcHist.forEach((v,i)=>{const x=i/(ipcHist.length-1)*W,y=H-2-(v/mx)*(H-4);i?g.lineTo(x,y):g.moveTo(x,y)});
+  g.strokeStyle='#4f6bf5';g.lineWidth=2;g.stroke();g.lineTo(W,H);g.lineTo(0,H);g.closePath();const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#4f6bf544');gr.addColorStop(1,'#4f6bf500');g.fillStyle=gr;g.fill()}
+
+function ipc64(){let s=0;const c=SIM.cycle;const n=Math.min(64,c);for(let i=0;i<n;i++)s+=SIM.retHist[(c-i)&255];return n?s/n:0}
+function diagnose(){
+  const c=SIM.cycle,fe=SIM.fe,r=SIM.dispReason;const h=SIM.rob[0];const ip=ipc64();
+  if(ip>=7.5)return['8-wideの退役幅を使い切っている',`IPC ${ip.toFixed(2)} · ROB ${SIM.rob.length}/${ROB_CAP} · 律速はRenameと退役の幅`,'#16a34a'];
+  if(SIM.rob.length>=ROB_CAP-8&&h)return[`ROB満杯 · 先頭命令の完了待ち`,`${h.asm} · ${h.tI<0?'発行待ち':h.done?'完了':`${h.lvl||TNAME[h.type]} 残り${Math.max(0,h.doneCycle-c)}cyc`}`,'#4f6bf5'];
+  if(r&&r!=='FE')return[`ディスパッチ停止 · ${r}`,h?`ROB先頭 ${h.asm}`:'','#4f6bf5'];
+  if(fe.wrongPath)return['間違ったパスを投機実行中','予測ミスした分岐が実行ユニットで解決されるまで続く','#e5484d'];
+  if(c<fe.recoverUntil)return['分岐予測ミスからの回復中','リダイレクト後、フロントエンドが再び満たされるまでのバブル','#e5484d'];
+  if(fe.stallUntil>c)return[`フロントエンド停止 · ${fe.reason}`,`残り ${fe.stallUntil-c}cyc`,'#e8930c'];
+  if(r==='FE')return['フロントエンドの供給不足',`供給元 ${fe.src==='opc'?'Op Cache':fe.src==='dec'?'デコーダ':'MSROM'}`,'#e8930c'];
+  return['8-wideディスパッチが埋まっている',`IPC ${ipc64().toFixed(2)} · 律速はRename/退役の幅`,'#16a34a'];
+}
+let uiT=0,panT=0;
+function uiTick(dt){
+  uiT+=dt;panT+=dt;
+  if(panT>.05){panT=0;drawBP();drawCache();drawTrace();drawSlots()}
+  if(uiT<.1)return;uiT=0;
+  const c=SIM.cycle,ip=ipc64();ipcHist.push(ip);if(ipcHist.length>120)ipcHist.shift();
+  $('#hCyc').textContent=fmtN(c);$('#hIpc').textContent=ip.toFixed(2);$('#hRet').textContent=fmtN(SIM.stats.inst);$('#hInf').textContent=SIM.rob.length+SIM.fePipe.length;
+  $('#kIpc').textContent=ip.toFixed(2);drawSpark();if(SIM.mk){const dc=SIM.cycle-SIM.mk.c;$('#mkR').textContent=`計測 ${fmtN(dc)} cyc · IPC ${dc?((SIM.stats.inst-SIM.mk.inst)/dc).toFixed(2):'—'}`}
+  const inst=Math.max(1,SIM.stats.inst);$('#kMpki').textContent=(1000*(BP.misp+BP.retMisp)/inst).toFixed(1);
+  $('#kFl').innerHTML=`${SIM.stats.flushes}<small>/${fmtN(SIM.stats.flushedOps)} ops</small>`;
+  $('#kLl').innerHTML=`${SIM.stats.ldN?(SIM.stats.ldLat/SIM.stats.ldN).toFixed(1):'0'}<small>cyc</small>`;
+  $('#kDr').innerHTML=`${fmtN(SIM.stats.dram)}<small>/${fmtN(SIM.stats.pf)}</small>`;
+  gEl.querySelectorAll('.gauge').forEach((d,i)=>{const v=GA[i][1]();d.querySelector('.fg').setAttribute('stroke-dasharray',`${v<0?0:v*CIRC} ${CIRC}`);d.querySelector('text').textContent=v<0?'—':(v*100).toFixed(v>.995?0:1)+'%'});
+  oEl.querySelectorAll('.occ:not(.mini)').forEach((d,i)=>{const v=OC[i][1](),m=OC[i][2],f=v/m;const fl=d.querySelector('.fl');fl.style.width=(f*100)+'%';fl.style.background=occCol(f);d.querySelector('.vv').textContent=`${v}/${m}`});
+  mini.querySelectorAll('.fl').forEach((fl,k)=>{const f=SIM.intS[k].length/IS_CAP;fl.style.width=f*100+'%';fl.style.background=occCol(f)});mini.querySelector('.vv').textContent=SIM.intS.reduce((a,q)=>a+q.length,0);
+  mini2.querySelectorAll('.fl').forEach((fl,k)=>{const f=SIM.fpS[k].length/FS_CAP;fl.style.width=f*100+'%';fl.style.background=occCol(f)});mini2.querySelector('.vv').textContent=SIM.fpS.reduce((a,q)=>a+q.length,0);
+  const E=SIM.tdE,tot=(E.ret+E.bad+E.fe+E.be)||1;TD.forEach(([k])=>{const f=E[k]/tot;document.querySelector(`#tdbar [data-k=${k}]`).style.flexGrow=Math.max(.001,f);document.querySelector(`#tdl [data-v=${k}]`).textContent=(f*100).toFixed(0)+'%'});
+  pEl.querySelectorAll('.fl').forEach((fl,i)=>{const v=i<12?SIM.uUtil[i]:SIM.fUtil[i-12];fl.style.height=Math.min(100,v*100)+'%'});
+  $('#banner .k').textContent=running?'BOTTLENECK · LIVE':'BOTTLENECK · PAUSED';$('#banner .k').style.color=running?'':'#7c5cf6';
+  const [m,s,col]=diagnose();$('#bnM').textContent=m;$('#bnM').style.color=col;$('#bnS').textContent=s;
+  const fe=SIM.fe;const fs=fe.wrongPath?'wrong':fe.stallUntil>c?'stall':fe.state==='ucode'?'ucode':fe.src;
+  document.querySelectorAll('[data-fe]').forEach(p=>p.classList.toggle('on',p.dataset.fe===fs||(fs==='wrong'&&p.dataset.fe===(fe.src==='ucode'?'opc':fe.src))));
+  if(CFG.follow){const op=SIM.trace.find(o=>o.id===V.followId)||SIM.rob.find(o=>o.id===V.followId);const f=$('#follow');
+    if(op){f.style.display='block';const st=op.tX>=0?'<span style="color:#e5484d">破棄</span>':op.tR>=0?'<span style="color:#16a34a">退役</span>':op.done?'完了 · 退役待ち':op.tI>=0?`実行中 ${op.lvl||''}`:op.tD>=0?'スケジューラで待機':'フロントエンド';
+      f.innerHTML=`<b>◉ 追跡 #${op.id}</b> ${op.asm}<br>PC ${hx(op.pc)} · ${TNAME[op.type]} · ${st}<br>F ${op.tF} → D ${op.tD<0?'…':op.tD} → I ${op.tI<0?'…':op.tI} → C ${op.tC<0?'…':op.tC} → R ${op.tR<0?'…':op.tR}`;
+      if((op.tR>=0&&c-op.tR>40)||(op.tX>=0&&c-op.tX>40))V.followWant=true}else{V.followWant=true}}
+  if(hoverId)renderTip();
+}
+
+document.querySelectorAll('.col').forEach(c=>c.addEventListener('click',e=>{const h=e.target.closest('.card>h3');if(!h||e.target.closest('button,input'))return;h.parentElement.classList.toggle('cl')}));
+/* breakpoints, experiments, tour */
+function hitBreak(){const r=SIM.brk;SIM.brk=null;acc=0;if(running)$('#bPlay').click();toast('⏸ ブレークポイントで停止',`${r} · Spaceで再開、→で1サイクル`,'#7c5cf6');logEv('BRK',r,'#7c5cf6',true)}
+const BKS=[['misp','分岐予測ミス','フラッシュの直後で止める'],['dram','DRAMアクセス','正しいパスのロードがL3をミスした時'],['rob','ROB満杯','ディスパッチが止まり始めた瞬間'],['imiss','L1Iミス','命令フェッチがキャッシュを外した時']];
+for(const [k,l,sub] of BKS){const d=document.createElement('div');d.className='sw';d.innerHTML=`<span>${l}<small>${sub}</small></span><div class="tog"></div>`;
+  d.querySelector('.tog').onclick=e=>{CFG.bk[k]=!CFG.bk[k];e.target.classList.toggle('on',CFG.bk[k])};$('#bks').appendChild(d)}
+function markReset(){SIM.mk={c:SIM.cycle,inst:SIM.stats.inst,misp:BP.misp+BP.retMisp,ldN:SIM.stats.ldN,ldLat:SIM.stats.ldLat,dram:SIM.stats.dram,h:L1D.hits,m:L1D.miss,fl:SIM.stats.flushes}}
+const EXPS=[];let expN=0;
+function condStr(){const s=cur;const ps=s.params.map(p=>`${p.label.replace(/ · .*/,'')}=${p.opts?p.opts[P[p.k]][1].split(' ')[0]:P[p.k]+(p.unit||'')}`);
+  const f=[];if(!CFG.prefetch)f.push('PF OFF');if(!CFG.opcache)f.push('OPC OFF');if(CFG.huge)f.push('2MB');if(CFG.decW===8)f.push('DEC8');if(CFG.dramLat!==320)f.push(`DRAM ${CFG.dramLat}`);
+  return[String(SCN.indexOf(s)+1).padStart(2,'0')+' '+s.name,[...ps,...f].join(' · ')]}
+function snapshot(){const m=SIM.mk,dc=SIM.cycle-m.c;if(dc<20){toast('計測区間が短すぎる','20サイクル以上進めてから記録する','#e8930c');return}
+  const di=SIM.stats.inst-m.inst,ld=SIM.stats.ldN-m.ldN,h=L1D.hits-m.h,mm=L1D.miss-m.m;const [nm,cd]=condStr();
+  EXPS.unshift({n:++expN,nm,cd,cyc:dc,ipc:di/dc,mpki:1000*(BP.misp+BP.retMisp-m.misp)/Math.max(1,di),l1:h+mm?h/(h+mm):-1,ll:ld?(SIM.stats.ldLat-m.ldLat)/ld:0});
+  if(EXPS.length>12)EXPS.pop();renderExps(true);toast('計測を記録',`${nm} · IPC ${(di/dc).toFixed(2)}`,'#16a34a')}
+function renderExps(fresh){const e=$('#exps');if(!EXPS.length){e.innerHTML='<div class="empty">条件を変えるたびに計測区間が始まり直す。比べたい状態ごとに記録すると、ここに並ぶ。例えば、配列ストリーミングでプリフェッチをONとOFFで1回ずつ記録する。</div>';return}
+  e.innerHTML=`<table><caption>表 記録した計測区間ごとのIPC、MPKI、L1Dヒット率、平均ロード遅延</caption><tr><th>#</th><th>条件</th><th>IPC</th><th>MPKI</th><th>L1D</th><th>LD</th></tr>`+
+   EXPS.map((x,i)=>`<tr class="${fresh&&i===0?'new':''}" title="${x.nm}\n${x.cd||'既定の条件'}\n${x.cyc} cyc"><td>${x.n}</td><td>${x.nm.slice(3)}${x.cd?`<br><span style="color:var(--mu);font-weight:500">${x.cd}</span>`:''}</td><td style="color:var(--ac)">${x.ipc.toFixed(2)}</td><td>${x.mpki.toFixed(1)}</td><td>${x.l1<0?'—':(x.l1*100).toFixed(0)+'%'}</td><td>${x.ll.toFixed(1)}</td></tr>`).join('')+'</table>'}
+renderExps();
+$('#bSnap').onclick=snapshot;$('#bMark').onclick=()=>{markReset();toast('計測区間をリセット','ここから新しく計測する','#4f6bf5')};
+const tour={on:false,t:0,cam:false};const TOUR_T=28;
+function stopTour(){if(!tour.on)return;tour.on=false;$('#bTour').classList.remove('on');$('#tourBar').style.display='none'}
+$('#bTour').onclick=()=>{if(tour.on){stopTour();return}tour.on=true;tour.t=0;tour.cam=false;$('#bTour').classList.add('on');$('#tourBar').style.display='block';if(!running)$('#bPlay').click();toast('ツアー開始',`${TOUR_T}秒ごとに次のシナリオへ · もう一度押すと止まる`,'#7c5cf6')};
+const TOUR_CAM={steady:'rename',cold:'tower',randbr:'rename',loop:'frontend',deep:'frontend',stream:'tower',chase:'rename',conflict:'tower',avx:'exec',div:'rename',stlf:'memory',elim:'exec',ucode:'overview',bigcode:'tower',tlb:'memory',custom:'exec'};
+function tourTick(dt){if(!tour.on)return;tour.t+=dt;$('#tourBar div').style.width=Math.min(100,tour.t/TOUR_T*100)+'%';
+  if(!tour.cam&&tour.t>TOUR_T*.5){tour.cam=true;flyTo(TOUR_CAM[cur.id]||'overview',2.2)}
+  if(tour.t>=TOUR_T){tour.t=0;tour.cam=false;applyScenario(SCN[(SCN.indexOf(cur)+1)%SCN.length])}}
+$('#trc').addEventListener('click',e=>{const r=e.currentTarget.getBoundingClientRect();const i=Math.floor((e.clientY-r.top-18)/14.5);const op=traceOps[i];if(!op)return;
+  V.followId=op.id;V.followWant=false;if(!CFG.follow){CFG.follow=true;$('#bFollow').classList.add('on')}op.viz=true;toast('命令を追跡',`#${op.id} ${op.asm}`,'#4f6bf5')});
+
+/* ============================================================
+   11. main loop
+   ============================================================ */
+function resize(){const r=vp.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/Math.max(1,r.height);camera.updateProjectionMatrix()}
+new ResizeObserver(resize).observe(vp);resize();
+let last=performance.now(),acc=0,fpsN=0,fpsT=0;
+function frame(t){
+  const dt=Math.min(.05,(t-last)/1000);last=t;NOW=t/1000;frameNo++;
+  vizP=clamp(26*CFG.density/Math.max(1,speed*Math.max(1.5,ipc64())),.015,1);
+  if(running){acc+=dt*speed;let n=0;while(acc>=1&&n<500){step();acc-=1;n++;if(SIM.brk){hitBreak();break}}if(n>=500)acc=0}
+  tourTick(dt);
+  updateViz(dt);
+  if(fly){fly.t+=dt/fly.dur;const e=fly.t>=1?1:1-Math.pow(1-fly.t,3);camera.position.lerpVectors(fly.p0,fly.p1,e);camera.position.y+=Math.sin(Math.PI*e)*(fly.arc||0);controls.target.lerpVectors(fly.t0,fly.t1,e);if(fly.t>=1)fly=null}
+  else if(CFG.follow&&V.followId>=0){const p=parts.find(p=>p.opId===V.followId);if(p){const d=p.m.position.clone().sub(controls.target).multiplyScalar(Math.min(1,dt*3));controls.target.add(d);camera.position.add(d)}}
+  controls.update();renderer.render(scene,camera);uiTick(dt);
+  if(frameNo===3){const l=$('#loading');if(l){l.style.opacity=0;setTimeout(()=>l.remove(),550)}}
+  fpsN++;fpsT+=dt;if(fpsT>=.5){$('#fps').textContent=`${Math.round(fpsN/fpsT)} fps · 粒子 ${parts.length} · 尾 ${trail.count}`;fpsN=0;fpsT=0}
+  requestAnimationFrame(frame);
+}
+applyScenario(SCN[0]);
+requestAnimationFrame(frame);
+window.__sim=()=>SIM;window.__P=()=>P;window.__prewarm=()=>{if(cur.prewarm)cur.prewarm(P);clearPipe()};window.__apply=id=>applyScenario(SCN.find(s=>s.id===id));window.__BP=BP;window.__caches={L1D,L2,L3,OPC,L1I,DTLB1};window.__cfg=CFG;window.__step=step;
+</script>
+</body>
+</html>
