@@ -201,6 +201,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       <button class="btn ib" id="bStep" title="1サイクル進める · →">⏭</button>
       <button class="btn ib" id="bReset" title="シナリオを最初から · R">↺</button>
       <div class="spd inset"><span style="font:700 9px var(--mono);color:var(--mu);letter-spacing:.12em">SPEED</span><input type="range" id="spd" min="0" max="100" value="40"><span class="v" id="spdV">8 cyc/s</span></div>
+      <button class="btn" id="bSnd" title="サウンド · M">♪ サウンド</button>
       <button class="btn tour" id="bTour" title="シナリオを自動で巡回する · T">✦ ツアー</button>
       <button class="btn" id="bFollow" title="命令を1つ追跡する · F">◉ 追跡</button>
       <button class="btn" id="bAbout">ⓘ モデル</button>
@@ -225,6 +226,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
     <section class="card neu"><h3>Breakpoints<span class="r">発生したら一時停止</span></h3><div id="bks"></div></section>
     <section class="card neu"><h3>Global Settings</h3><div id="settings"></div>
       <div class="prm inset" style="margin-top:8px"><label>DRAMレイテンシ<b id="dlV">320 cyc</b></label><input type="range" id="dl" min="120" max="600" step="10" value="320"></div>
+      <div class="prm inset"><label>サウンド音量<b id="svV">60%</b></label><input type="range" id="sv" min="0" max="1" step="0.01" value="0.6"></div>
       <div class="prm inset"><label>粒子の密度<b id="dnV">×1.0</b></label><input type="range" id="dn" min="0.2" max="3" step="0.1" value="1"></div>
     </section>
   </aside>
@@ -424,7 +426,7 @@ BP.reset();
    ============================================================ */
 let SIM;
 function newSim(){
-  return{cycle:0,nextId:1,fe:{stallUntil:0,reason:'',state:'',src:'opc',wrongPath:false,wpPC:0,curLine:-1,ucodeLeft:0,ucodeTotal:0,ucodePC:0,forceMisp:false,recoverUntil:0,regs:{},lastOp:null,lastLoad:null,peek:null},
+  return{cycle:0,nextId:1,fe:{stallUntil:0,reason:'',state:'',src:'opc',wrongPath:false,wpPC:0,curLine:-1,decLine:-1,ucodeLeft:0,ucodeTotal:0,ucodePC:0,forceMisp:false,recoverUntil:0,regs:{},lastOp:null,lastLoad:null,peek:null},
     fePipe:[],rob:[],robTail:0,intS:[[],[],[],[],[],[]],nsq:[],fpS:[[],[],[]],exec:[],sqList:[],lq:0,sq:0,
     uBusy:new Float64Array(12),fBusy:new Float64Array(6),uUtil:new Float32Array(12),fUtil:new Float32Array(6),uHit:new Uint8Array(12),fHit:new Uint8Array(6),
     inflight:new Map(),dramFree:0,pfT:Array.from({length:8},()=>({last:-99,stride:0,conf:0,next:-1,lru:0})),mab2:0,mab3:0,
@@ -480,12 +482,15 @@ function pfLine(line,c){
   const r=fromBelow(line,c);L1D.fill(line,EV.PF);SIM.inflight.set(line,{ready:c+r.lat,lvl:r.lvl,pf:true});SIM.stats.pf++;V.prefetch(r.lvl,r.lat);
 }
 function lineCheck(line,pc,c){
+  const fe=SIM.fe;
+  if(fe.decLine>=0&&fe.decLine!==line){if(CFG.opcache)OPC.fill(fe.decLine);fe.decLine=-1}
+  if(fe.decLine===line)return{src:'dec'};
   if(CFG.opcache&&OPC.lookup(line))return{src:'opc'};
   const pg=Math.floor(pc/4096);let t=0;
   if(!ITLB1.lookup(pg)){if(ITLB2.lookup(pg)){ITLB1.fill(pg);t=4}else{ITLB2.fill(pg);ITLB1.fill(pg);t=25}}
   if(!L1I.lookup(line)){const r=fromBelow(line,c);L1I.fill(line);for(let k=1;k<=3;k++)if(!L1I.has(line+k)){fromBelow(line+k,c);L1I.fill(line+k,EV.PF)}SIM.stats.l1im++;V.imiss(r.lvl,r.lat);if(CFG.bk.imiss&&V.enabled)SIM.brk=`L1Iミス · ${hx(pc)}`;logEv('FE',`L1Iミス ${hx(pc)} → ${r.lvl} ${r.lat}cyc`,'#e8930c');return{stall:r.lat+t,reason:`L1Iミス → ${r.lvl}`}}
   if(t)return{stall:t,reason:'ITLBミス'};
-  if(CFG.opcache)OPC.fill(line);
+  fe.decLine=line;
   return{src:'dec'};
 }
 
@@ -512,6 +517,7 @@ function pushOp(inst,src,depth,wrong,c){
   }
   op.viz=(V.followWant&&!wrong)||Math.random()<vizP;
   if(V.followWant&&!wrong&&op.viz){V.followId=op.id;V.followWant=false}
+  if(src==='dec')SIM.lastDecC=c;
   SIM.fePipe.push(op);SIM.trace.push(op);if(SIM.trace.length>900)SIM.trace.shift();
   V.fetch(op,depth);
   return op;
@@ -559,6 +565,7 @@ function fetchStage(c){
       const r=branchFetch(op,inst,c);
       if(r.misp){fe.wrongPath=true;fe.wpPC=inst.pc+0x40}
       if(r.bubble){fe.stallUntil=c+1+r.bubble;fe.reason=r.reason;break}
+      if(r.taken&&src==='dec'&&fe.decLine>=0){if(CFG.opcache)OPC.fill(fe.decLine);fe.decLine=-1}
       if(r.taken&&src!=='opc')break;
     }
   }
@@ -991,6 +998,7 @@ const SPRITES=[];
  ['ren','Rename · 8-wide','#7c5cf6',1.4],['rob','ROB · 576','#4f6bf5',1.3],['is2','Int Schedulers ×6','#3b82f6',1.3],['fs1','FP Schedulers','#ec4899',1.3],['lsu','Load / Store','#10b981',1.4],
  ['l1d','L1D · 48KB','#10b981',1.4],['l2','L2 · 1MB','#06b6d4',1.4],['l3','L3 · 48MB','#8b5cf6',1.4],['dram','DRAM','#ef4444',1.4],['u6','Int Units','#e8930c',1.2],['f2','FP Units','#ec4899',1.2]]
  .forEach(([id,t,c,dy])=>{const b=BLK[id];const sp=spriteLabel(t,c);sp.position.set(b.x,b.y1+dy,b.z);sp.userData.y=b.y1+dy;world.add(sp);SPRITES.push(sp)});
+const idleSp=spriteLabel('休止中 · Op Cacheが供給中','#94a3b8');{const b0=BLK.dec0,b1=BLK.dec1;idleSp.position.set((b0.x+b1.x)/2,b0.y1+.5,b0.z+.9);idleSp.scale.set(4.2,.92,1);idleSp.material.opacity=0;world.add(idleSp)}
 
 // entry grids
 const PAL={};const C=h=>new THREE.Color(h);
@@ -1066,15 +1074,16 @@ const V={enabled:true,
   },
   ring(pos,color,scale=4,dur=.9){if(!this.enabled)return;let r=rfree.pop();if(!r){r=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide}));world.add(r)}
     r.material.color.set(color);r.visible=true;r.position.copy(pos);r.position.y+=.05;rings.push({r,t:0,dur,scale})},
-  pulse(id,color,s=1){const b=BLK[id];if(!b||!this.enabled)return;b.pulse=Math.min(1.4,Math.max(b.pulse,s));b.pc.set(color)},
+  pulse(id,color,s=1){const b=BLK[id];if(!b||!this.enabled)return;b.lastAct=NOW;b.pulse=Math.min(1.4,Math.max(b.pulse,s));b.pc.set(color)},
   opColor(op){return op.wrong?'#9aa1b0':TCOL[op.type]},
   fetch(op,depth){
     if(!this.enabled)return;
-    if(op.src==='dec')this.pulse(Math.floor(op.pc/64)%2?'dec1':'dec0','#16a34a',.6);
+    const dk=CFG.decW===8?Math.floor(op.pc/64)%2:0;
+    if(op.src==='dec'){this.pulse(dk?'dec1':'dec0','#16a34a',.7);this.pulse(dk?'iq1':'iq0','#16a34a',.4);this.pulse('l1i','#e8930c',.3);this.pulse('fq','#e8930c',.25);this.pulse('itlb','#e8930c',.25)}
     if(op.src==='opc')this.pulse('opc','#4f6bf5',.5);
     if(op.src==='ucode')this.pulse('ucode','#0ea5c6',.9);
     if(!op.viz)return;
-    let path;const d=Math.floor(op.pc/64)%2;
+    let path;const d=dk;
     if(op.src==='opc')path=['bp','opc','moq'];else if(op.src==='dec')path=['bp','fq','itlb','l1i',d?'iq1':'iq0',d?'dec1':'dec0','moq'];else path=['ucode','moq'];
     this.spawn(path,{color:this.opColor(op),alpha:op.wrong?.55:1,dur:this.dur(depth)*(op.src==='dec'?1.3:1),opId:op.id});
   },
@@ -1101,7 +1110,7 @@ const V={enabled:true,
     if(why==='misp'){
       const p=BLK[br.uid||'u9'].top;this.ring(p,'#ef4444',7,1.1);this.ring(BLK.rob.top,'#ef4444',9,1.2);
       this.spawn([br.uid||'u9','ren','bp'],{color:'#ef4444',kind:'big',dur:.9,lift:2.2,onEnd:()=>{this.ring(BLK.bp.top,'#ef4444',5,.9)}});
-      this.pulse('bp','#ef4444',1.3);this.pulse('rob','#ef4444',.9);this.shake=.12;
+      this.pulse('bp','#ef4444',1.3);this.pulse('rob','#ef4444',.9);this.shake=.12;AU.ev('misp');
       if(NOW-this.lastToast>1.1){this.lastToast=NOW;toast('分岐予測ミス · パイプラインをフラッシュ',`${br.asm} · ${n} opsを破棄`,'#e5484d')}
     }else{this.ring(BLK.rob.top,'#7c5cf6',12,1.4);this.shake=.2;toast('パイプライン全消去',`${n} opsを破棄して再フェッチ`,'#7c5cf6')}
   },
@@ -1109,22 +1118,23 @@ const V={enabled:true,
     if(!this.enabled)return;if(this.budget<1&&!(op&&op.viz))return;this.budget--;
     const path=lvl==='L2'?['l1d','l2','l1d']:lvl==='L3'?['l1d','l2','l3','l2','l1d']:['l1d','l2','l3','dram','l3','l2','l1d'];
     this.spawn(path,{color:LVLCOL[lvl],kind:'line',dur:clamp(lat/speed,.8,4),lift:.9});
-    if(lvl==='DRAM'){this.pulse('dram','#ef4444',1);this.pulse('l3mab','#ef4444',.6)}else if(lvl==='L3')this.pulse('l3','#8b5cf6',.6);
+    if(lvl==='DRAM'){AU.ev('dram');this.pulse('dram','#ef4444',1);this.pulse('l3mab','#ef4444',.6)}else if(lvl==='L3')this.pulse('l3','#8b5cf6',.6);
     this.pulse('l2mab','#06b6d4',.4);
   },
-  prefetch(lvl,lat){if(!this.enabled||this.budget<1)return;this.budget-=.7;
+  prefetch(lvl,lat){if(!this.enabled||this.budget<1)return;AU.ev('pf');this.budget-=.7;
     const path=lvl==='L2'?['l2','l1d']:lvl==='L3'?['l3','l2','l1d']:['dram','l3','l2','l1d'];
     this.spawn(path,{color:'#22d3ee',kind:'line',alpha:.75,scale:.75,dur:clamp(lat/speed,.7,3.5),lift:.6})},
   imiss(lvl,lat){if(!this.enabled)return;const path=lvl==='L2'?['l2','l1i']:lvl==='L3'?['l3','l2','l1i']:['dram','l3','l2','l1i'];
-    this.spawn(path,{color:'#f59e0b',kind:'line',dur:clamp(lat/speed,.8,3.5),lift:1.5});this.pulse('l1i','#f59e0b',1)},
-  walk(){if(!this.enabled||this.budget<1)return;this.budget-=.5;this.spawn(['dtlb','l2','dtlb'],{color:'#a855f7',kind:'spark',dur:clamp(30/speed,.6,2),lift:1});this.pulse('dtlb','#a855f7',1)},
-  btbMiss(){if(!this.enabled)return;this.pulse('bp','#f59e0b',1);this.ring(BLK.bp.top,'#f59e0b',2.5,.7)},
-  ucode(){if(!this.enabled)return;this.ring(BLK.ucode.top,'#0ea5c6',2.5,.8)},
-  stlf(op){if(!this.enabled)return;if(op.viz||this.budget>0){this.budget-=.3;this.spawn(['sq','lq'],{color:'#f97316',kind:'spark',dur:.6,lift:1.1,scale:.8})}},
+    this.spawn(path,{color:'#f59e0b',kind:'line',dur:clamp(lat/speed,.8,3.5),lift:1.5});this.pulse('l1i','#f59e0b',1);AU.ev('imiss')},
+  walk(){if(!this.enabled||this.budget<1)return;AU.ev('walk');this.budget-=.5;this.spawn(['dtlb','l2','dtlb'],{color:'#a855f7',kind:'spark',dur:clamp(30/speed,.6,2),lift:1});this.pulse('dtlb','#a855f7',1)},
+  btbMiss(){if(!this.enabled)return;AU.ev('btb');this.pulse('bp','#f59e0b',1);this.ring(BLK.bp.top,'#f59e0b',2.5,.7)},
+  ucode(){if(!this.enabled)return;AU.ev('ucode');this.ring(BLK.ucode.top,'#0ea5c6',2.5,.8)},
+  stlf(op){if(!this.enabled)return;AU.ev('stlf');if(op.viz||this.budget>0){this.budget-=.3;this.spawn(['sq','lq'],{color:'#f97316',kind:'spark',dur:.6,lift:1.1,scale:.8})}},
   storeCommit(op){if(this.enabled&&op.viz)this.spawn(['sq','l1d'],{color:'#f97316',kind:'line',scale:.6,dur:.6,lift:.5})},
 };
 function nodePos(n){if(n instanceof THREE.Vector3)return n.clone();const b=BLK[n];const v=b.top.clone();v.x+=(Math.random()-.5)*Math.min(b.w*.55,1.4);v.z+=(Math.random()-.5)*Math.min(b.d*.4,.4);v.y+=.2;return v}
 function buildPath(pts,lift){const segs=[];let L=0;for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];const d=a.distanceTo(b);const m=a.clone().add(b).multiplyScalar(.5);m.y=Math.max(a.y,b.y)+lift+d*.16;const len=d*1.1+.01;segs.push({a,m,b,len,L0:L});L+=len}return{segs,L}}
+const FEDEC=['fq','itlb','l1i','iq0','iq1','dec0','dec1','ucode'],IDLEC=new THREE.Color('#d6dbe4');
 const tmpV=new THREE.Vector3(),tmpC=new THREE.Color(),HOT=new THREE.Color('#ff5a3c');
 function evalPath(p,t,out){const s=t*p.L;let g=p.segs[p.segs.length-1];for(const sg of p.segs)if(s<=sg.L0+sg.len){g=sg;break}
   let u=clamp((s-g.L0)/g.len,0,1);u=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;const a=g.a,m=g.m,b=g.b,iu=1-u;
@@ -1148,6 +1158,9 @@ function updateViz(dt){
       if(b.bounce)b.mesh.position.y=b.y0+b.h/2+b.pulse*.22}else if(b.pulse>0){b.pulse=0;for(const mt of b.mats)mt.emissive.setRGB(0,0,0);if(b.bounce)b.mesh.position.y=b.y0+b.h/2}}
   for(const u of UNITS)BLK[u.id].mat.color.copy(BLK[u.id].base).lerp(HOT,Math.min(1,SIM.uUtil[u.i])*.6);
   for(const u of FUNITS)BLK[u.id].mat.color.copy(BLK[u.id].base).lerp(HOT,Math.min(1,SIM.fUtil[u.i])*.6);
+  const fs=SIM.fe.src,tgt=(SIM.cycle-(SIM.lastDecC??-1e9)>24&&fs!=='dec')?1:0;V.idleF=(V.idleF||0)+(tgt-(V.idleF||0))*Math.min(1,dt*2.5);
+  for(const id of FEDEC){if(id==='ucode')continue;const b=BLK[id];for(const mt of b.mats)if(b.pulse<=.002)mt.color.copy(b.base).lerp(IDLEC,V.idleF*.7)}
+  idleSp.material.opacity=V.idleF*.95;idleSp.visible=V.idleF>.02&&CFG.labels;
   SPRITES.forEach((sp,i)=>{sp.position.y=sp.userData.y+Math.sin(NOW*1.4+i*.9)*.07});
   for(const k in LINKS){const l=LINKS[k];if(l._f===frameNo)continue;l._f=frameNo;l.tex.offset.x-=dt*(.25+l.traffic*.9);l.mat.emissiveIntensity=Math.min(.7,l.traffic*.12);l.traffic*=Math.exp(-dt*2);l.m.visible=CFG.links}
   if(V.shake>.001){world.position.set((Math.random()-.5)*V.shake,0,(Math.random()-.5)*V.shake);V.shake*=Math.exp(-dt*7)}else world.position.set(0,0,0);
@@ -1196,7 +1209,7 @@ $('#bPlay').onclick=()=>{SIM.brk=null;running=!running;$('#bPlay').textContent=r
 $('#bStep').onclick=()=>{if(running)$('#bPlay').click();step()};
 $('#bReset').onclick=()=>applyScenario(cur);
 $('#bFollow').onclick=()=>{CFG.follow=!CFG.follow;$('#bFollow').classList.toggle('on',CFG.follow);if(CFG.follow){V.followWant=true}else{V.followId=-1;$('#follow').style.display='none'}};
-addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.code==='Space'){e.preventDefault();$('#bPlay').click()}else if(e.key==='ArrowRight')$('#bStep').click();else if(e.key==='r'||e.key==='R')$('#bReset').click();else if(e.key==='f'||e.key==='F')$('#bFollow').click();else if(e.key==='s'||e.key==='S')snapshot();else if(e.key==='t'||e.key==='T')$('#bTour').click();else if(/^[0-9]$/.test(e.key)){const i=e.key==='0'?9:+e.key-1;stopTour();applyScenario(SCN[i])}});
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.code==='Space'){e.preventDefault();$('#bPlay').click()}else if(e.key==='ArrowRight')$('#bStep').click();else if(e.key==='r'||e.key==='R')$('#bReset').click();else if(e.key==='f'||e.key==='F')$('#bFollow').click();else if(e.key==='s'||e.key==='S')snapshot();else if(e.key==='m'||e.key==='M')AU.setOn(!AU.on);else if(e.key==='t'||e.key==='T')$('#bTour').click();else if(/^[0-9]$/.test(e.key)){const i=e.key==='0'?9:+e.key-1;stopTour();applyScenario(SCN[i])}});
 
 // camera bar
 const cb=$('#camBar');for(const k in CAMS){const b=document.createElement('button');b.className='btn';b.textContent=CAMS[k][2];b.onclick=()=>flyTo(k);cb.appendChild(b)}
@@ -1236,6 +1249,7 @@ function applyScenario(s){
   logEv('SYS',`シナリオ開始 · ${s.name}${s.warm?` · ${fmtN(SIM.statC0)}cycのウォームアップ済み`:''}`,'#4f6bf5',true);
   toast(s.name,s.warm?`${fmtN(SIM.cycle)}サイクルのウォームアップ後から開始`:'すべて空の状態から開始','#4f6bf5');
   if(CFG.follow)V.followWant=true;
+  if(typeof AU!=='undefined')AU.ev('scene');
 }
 // settings
 const SETS=[['prefetch','ハードウェアプリフェッチ','L1D・L2のストライド検出',()=>{}],['opcache','Op Cache','OFFで常にデコード経路',()=>{OPC.flush()}],['huge','2MBページ','DTLBのカバー範囲を拡大',()=>{DTLB1.flush();DTLB2.flush()}],
@@ -1299,7 +1313,7 @@ const INFO={
  itlb:['ITLB','L1 64エントリ · L2 2048エントリ','命令フェッチの仮想アドレスを物理アドレスに変換する。'],
  l1i:['L1命令キャッシュ','32KB · 8-way · 64セット','Op Cacheに無い命令バイト列を供給する。2系統でそれぞれ1サイクル32バイトを読み出す。'],
  iq0:['Instruction Queue','','L1Iから読んだ命令バイト列をデコーダの前で溜める。'],iq1:['Instruction Queue','','L1Iから読んだ命令バイト列をデコーダの前で溜める。'],
- dec0:['4-Way Decode','1サイクル4命令','x86命令をmacro-opに変換する。このモデルの既定では1スレッドが片方のクラスタだけを使う。'],dec1:['4-Way Decode','1サイクル4命令','2つ目のデコードクラスタ。グローバル設定のデコード8-wideで1スレッドから両方を使える。'],
+ dec0:['4-Way Decode','1サイクル4命令','x86命令をmacro-opに変換する。このモデルの既定では1スレッドが片方のクラスタだけを使う。Op Cacheがヒットしている間は使われないので、灰色に沈んで休止中と表示される。'],dec1:['4-Way Decode','1サイクル4命令','2つ目のデコードクラスタ。このモデルの既定では使わず、グローバル設定のデコード8-wideをONにすると、1スレッドからラインごとに交互に使う。'],
  ucode:['Microcode ROM','MSROM','複雑な命令を一連のmicro-opとして1サイクル4個ずつ供給する。'],
  opc:['Op Cache','6.75Kエントリ · 16-way','デコード済みのmicro-opを保持し、1サイクル最大9個を供給する。このモデルではコード32KB分を保持する近似を使う。'],
  moq:['Micro-Op Queue','96エントリと仮定','フロントエンドとRenameの間の緩衝。上面のLEDの明るいものがRenameに進める状態。'],
@@ -1370,8 +1384,9 @@ $('#mbox').innerHTML=`<h2>このシミュレータのモデル</h2><p>添付のZ
 <tr><td>分岐予測器</td><td>TAGE系。4096エントリのbimodalと、履歴長5、11、23、47、97ビット、各1024エントリ、9ビットタグのテーブル5本。テーブル数、容量、履歴長は実機とは異なる</td></tr>
 <tr><td>プリフェッチャ</td><td>L1Dのストライド検出、最大64ライン先まで</td></tr><tr><td>DRAM帯域</td><td>1ラインあたり3サイクル</td></tr>
 <tr><td>ページウォーク</td><td>DTLB L2ミス時に30サイクル</td></tr><tr><td>ストア転送</td><td>成功時7サイクル。失敗時はストアの退役を待ち、さらに22サイクル</td></tr></table>
+<h4>音の読み方</h4><ul><li>サウンドは既定でOFF。ヘッダーの♪ボタンかMキーで鳴らし始める。</li><li>ガラスの鈴のような旋律は、命令の退役に合わせて鳴る。IPCが高いほど音が密に、明るく、高くなる。IPCが1未満だと1オクターブ下がり、間隔がまばらになる。</li><li>背景の和音はIPCに応じてフィルタが開き、4つの和音を約5秒ごとに巡る。</li><li>上から下へ落ちる3音は分岐予測ミス。低く膨らむ音はDRAMアクセス。かすかな高音はプリフェッチ。こもった短い音はL1IミスとBTBミス。</li><li>粒子と同じく、表示中の出来事にだけ音を付け、同じ種類の音は短い間隔で間引く。</li></ul>
 <h4>画面の読み方</h4><ul><li>粒子の色は命令の種類を表す。灰色は予測ミスの後ろで投機実行された命令。</li><li>立方体はキャッシュラインの移動を表す。色は供給元で、水色はプリフェッチ。</li><li>ROBの上面のセルは576エントリそれぞれを表す。背が高いセルは実行中、緑は完了して退役待ち、赤は予測ミスした分岐。</li><li>Branch Predictor Labの予測ログの提供元は、Bがbimodal、T1〜T5がタグ付きテーブル。*は、担当テーブルのエントリが新しく確信が弱いので、1段短いテーブルの予測を代わりに使ったことを表す。</li><li>L1D、L2、L3は、wayの数だけ積み重なった板として描いている。ヒットしたwayの板が緑、埋めたwayが青、追い出したwayが橙に光る。</li><li>Top-downはディスパッチの8スロットを、Retiring、Bad Speculation、Frontend Bound、Backend Boundの4つに分類した比率。</li></ul>
-<p style="color:var(--mu);margin-top:16px">ショートカット Space 再生と停止 · → 1サイクル · R リセット · F 追跡 · S 計測を記録 · T ツアー · 1〜0 シナリオ</p>`;
+<p style="color:var(--mu);margin-top:16px">ショートカット Space 再生と停止 · → 1サイクル · R リセット · F 追跡 · S 計測を記録 · T ツアー · M サウンド · 1〜0 シナリオ</p>`;
 
 /* ============================================================
    10. 2D panels
@@ -1525,8 +1540,58 @@ function uiTick(dt){
 }
 
 document.querySelectorAll('.col').forEach(c=>c.addEventListener('click',e=>{const h=e.target.closest('.card>h3');if(!h||e.target.closest('button,input'))return;h.parentElement.classList.toggle('cl')}));
+/* sound */
+const CH=[[0,4,7,12,16,19],[-3,0,4,9,12,16],[-7,-3,0,5,9,12],[-5,-1,2,7,11,14]];const ROOT=[0,-3,-7,-5];
+const nf=semi=>523.25*Math.pow(2,semi/12);
+const AU={ctx:null,on:false,vol:.6,step:0,next:0,lastInst:0,last:{},
+  init(){const C=new(window.AudioContext||window.webkitAudioContext)();this.ctx=C;
+    this.master=C.createGain();this.master.gain.value=0;const comp=C.createDynamicsCompressor();comp.threshold.value=-20;comp.ratio.value=3;comp.attack.value=.01;this.master.connect(comp);comp.connect(C.destination);
+    const hp=C.createBiquadFilter();hp.type='highpass';hp.frequency.value=90;hp.connect(this.master);
+    this.rev=C.createConvolver();this.rev.buffer=this.ir(3.6);const wet=C.createGain();wet.gain.value=.6;this.rev.connect(wet);wet.connect(hp);
+    this.dl=C.createDelay(1.5);this.dl.delayTime.value=.42;const fb=C.createGain();fb.gain.value=.33;const lp=C.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2800;
+    this.dl.connect(lp);lp.connect(fb);fb.connect(this.dl);const dlo=C.createGain();dlo.gain.value=.3;lp.connect(dlo);dlo.connect(hp);lp.connect(this.rev);
+    this.bus=C.createGain();const dry=C.createGain();dry.gain.value=.7;this.bus.connect(dry);dry.connect(hp);this.bus.connect(this.rev);const ds=C.createGain();ds.gain.value=.45;this.bus.connect(ds);ds.connect(this.dl);
+    const pf=C.createBiquadFilter();pf.type='lowpass';pf.frequency.value=400;pf.Q.value=.6;const pg=C.createGain();pg.gain.value=0;pf.connect(pg);pg.connect(this.rev);const pd=C.createGain();pd.gain.value=.5;pg.connect(pd);pd.connect(hp);
+    const lfo=C.createOscillator();lfo.frequency.value=.07;const lg=C.createGain();lg.gain.value=160;lfo.connect(lg);lg.connect(pf.frequency);lfo.start();
+    this.pad={f:pf,g:pg,o:[0,7,12,19].map((iv,i)=>{const o=C.createOscillator();o.type=i%2?'sine':'triangle';o.frequency.value=130.81*Math.pow(2,iv/12);o.detune.value=(i-1.5)*5;const og=C.createGain();og.gain.value=i===3?.35:1;o.connect(og);og.connect(pf);o.start();o.iv=iv;return o})}},
+  ir(sec){const C=this.ctx,n=Math.floor(C.sampleRate*sec),b=C.createBuffer(2,n,C.sampleRate);for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);let lp=0;for(let i=0;i<n;i++){lp=lp*.6+(Math.random()*2-1)*.4;d[i]=lp*Math.pow(1-i/n,2.6)}}return b},
+  setOn(v){if(v&&!this.ctx){try{this.init()}catch(e){toast('サウンドを開始できない','このブラウザか表示環境で音声が許可されていない','#e5484d');return}}
+    this.on=v;$('#bSnd').classList.toggle('on',v);$('#bSnd').textContent=v?'♪ サウンド ON':'♪ サウンド';if(!this.ctx)return;const t=this.ctx.currentTime;
+    if(v){this.ctx.resume().catch(()=>{});this.master.gain.cancelScheduledValues(t);this.master.gain.setTargetAtTime(this.vol,t,.4);this.next=t+.15;this.lastInst=SIM.stats.inst;this.arp([0,2,3,4,5],.11,.06)}
+    else{this.master.gain.cancelScheduledValues(t);this.master.gain.setTargetAtTime(0,t,.25)}},
+  bell(f,t,dur=1.6,amp=.06,bright=1){const C=this.ctx;const g=C.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(amp,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+dur);g.connect(this.bus);
+    const pan=C.createStereoPanner?C.createStereoPanner():null;if(pan){pan.pan.value=Math.random()*1.2-.6;g.disconnect();g.connect(pan);pan.connect(this.bus)}
+    [[1,1],[2,.16*bright],[2.756,.11*bright],[5.404,.035*bright]].forEach(([r,a],k)=>{const o=C.createOscillator();o.type='sine';o.frequency.value=f*r;o.detune.value=(Math.random()-.5)*6;const og=C.createGain();
+      og.gain.setValueAtTime(a,t);if(k)og.gain.exponentialRampToValueAtTime(.0001,t+dur*(.45/k+.08));o.connect(og);og.connect(g);o.start(t);o.stop(t+dur+.05)})},
+  bloom(f,t,dur=3.2,amp=.09){const C=this.ctx;const o=C.createOscillator(),o2=C.createOscillator(),g=C.createGain(),lp=C.createBiquadFilter();o.type='sine';o2.type='triangle';o.frequency.value=f;o2.frequency.value=f*1.5;o2.detune.value=4;
+    lp.type='lowpass';lp.frequency.setValueAtTime(200,t);lp.frequency.exponentialRampToValueAtTime(1400,t+.5);lp.frequency.exponentialRampToValueAtTime(240,t+dur);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(amp,t+.12);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(lp);o2.connect(lp);lp.connect(g);g.connect(this.bus);o.start(t);o2.start(t);o.stop(t+dur);o2.stop(t+dur)},
+  arp(idx,gap,amp){if(!this.ctx)return;const t=this.ctx.currentTime+.02,tn=CH[Math.floor(this.step/32)%4];idx.forEach((k,i)=>this.bell(nf(tn[k]),t+i*gap,1.8,amp,1.2))},
+  tick(){if(!this.on||!this.ctx)return;const C=this.ctx,t=C.currentTime,ip=ipc64();
+    this.pad.f.frequency.setTargetAtTime(300+ip*190,t,.6);this.pad.g.gain.setTargetAtTime(running?.022:.009,t,.8);
+    if(this.next<t-.5)this.next=t+.05;
+    while(this.next<t+.15){const st=this.step++,ch=Math.floor(st/32)%4;
+      if(st%32===0)this.pad.o.forEach(o=>o.frequency.setTargetAtTime(130.81*Math.pow(2,(ROOT[ch]+o.iv)/12),this.next,.5));
+      if(running){const di=SIM.stats.inst-this.lastInst;this.lastInst=SIM.stats.inst;const dens=Math.min(1,ip/7);
+        if(di>0&&(st%2===0||Math.random()<dens*.8)){const tn=CH[ch],pat=[0,2,4,5,3,1,2,4];let semi=tn[pat[st%8]];if(ip<1)semi-=12;if(dens>.9&&st%4===3)semi+=12;
+          this.bell(nf(semi),this.next,1.2+(1-dens)*1.8,.028+.03*dens,.5+dens*.7)}}
+      this.next+=.15}},
+  ev(k){if(!this.on||!this.ctx||!V.enabled)return;const t=this.ctx.currentTime;const gap={misp:.25,dram:.6,pf:.16,imiss:.35,btb:.35,ucode:.6,brk:.3,scene:.5,stlf:.25,walk:.3}[k]||.2;
+    if(t-(this.last[k]||0)<gap)return;this.last[k]=t;const tn=CH[Math.floor(this.step/32)%4];
+    if(k==='misp'){[5,3,1].forEach((i,n)=>this.bell(nf(tn[i]-(n===2?12:0)),t+n*.065,1.6+n*.5,.06,1.5));this.bloom(nf(tn[0]-36),t+.1,1.6,.05)}
+    else if(k==='dram')this.bloom(nf(tn[0]-36),t,3.4,.1);
+    else if(k==='pf')this.bell(nf(tn[4]+12),t,.6,.012,.4);
+    else if(k==='imiss'||k==='btb')this.bell(nf(tn[2]-12),t,.4,.03,.15);
+    else if(k==='ucode')[0,1,2,3].forEach(n=>this.bell(nf(tn[n]+12),t+n*.04,.5,.018,.4));
+    else if(k==='stlf')this.bell(nf(tn[3]),t,.5,.015,.3);
+    else if(k==='walk')this.bell(nf(tn[1]-12),t,.6,.02,.2);
+    else if(k==='brk')[0,4].forEach((i,n)=>this.bell(nf(tn[i]),t+n*.12,2,.07,1.3));
+    else if(k==='scene')[0,1,2,3,4,5].forEach((i,n)=>this.bell(nf(tn[i]),t+n*.075,2.2,.045,1.2))}
+};
+$('#bSnd').onclick=()=>AU.setOn(!AU.on);
+$('#sv').oninput=e=>{AU.vol=+e.target.value;$('#svV').textContent=Math.round(AU.vol*100)+'%';if(AU.on&&AU.ctx)AU.master.gain.setTargetAtTime(AU.vol,AU.ctx.currentTime,.1)};
 /* breakpoints, experiments, tour */
-function hitBreak(){const r=SIM.brk;SIM.brk=null;acc=0;if(running)$('#bPlay').click();toast('⏸ ブレークポイントで停止',`${r} · Spaceで再開、→で1サイクル`,'#7c5cf6');logEv('BRK',r,'#7c5cf6',true)}
+function hitBreak(){AU.ev('brk');const r=SIM.brk;SIM.brk=null;acc=0;if(running)$('#bPlay').click();toast('⏸ ブレークポイントで停止',`${r} · Spaceで再開、→で1サイクル`,'#7c5cf6');logEv('BRK',r,'#7c5cf6',true)}
 const BKS=[['misp','分岐予測ミス','フラッシュの直後で止める'],['dram','DRAMアクセス','正しいパスのロードがL3をミスした時'],['rob','ROB満杯','ディスパッチが止まり始めた瞬間'],['imiss','L1Iミス','命令フェッチがキャッシュを外した時']];
 for(const [k,l,sub] of BKS){const d=document.createElement('div');d.className='sw';d.innerHTML=`<span>${l}<small>${sub}</small></span><div class="tog"></div>`;
   d.querySelector('.tog').onclick=e=>{CFG.bk[k]=!CFG.bk[k];e.target.classList.toggle('on',CFG.bk[k])};$('#bks').appendChild(d)}
@@ -1565,7 +1630,7 @@ function frame(t){
   vizP=clamp(26*CFG.density/Math.max(1,speed*Math.max(1.5,ipc64())),.015,1);
   if(running){acc+=dt*speed;let n=0;while(acc>=1&&n<500){step();acc-=1;n++;if(SIM.brk){hitBreak();break}}if(n>=500)acc=0}
   tourTick(dt);
-  updateViz(dt);
+  updateViz(dt);AU.tick();
   if(fly){fly.t+=dt/fly.dur;const e=fly.t>=1?1:1-Math.pow(1-fly.t,3);camera.position.lerpVectors(fly.p0,fly.p1,e);camera.position.y+=Math.sin(Math.PI*e)*(fly.arc||0);controls.target.lerpVectors(fly.t0,fly.t1,e);if(fly.t>=1)fly=null}
   else if(CFG.follow&&V.followId>=0){const p=parts.find(p=>p.opId===V.followId);if(p){const d=p.m.position.clone().sub(controls.target).multiplyScalar(Math.min(1,dt*3));controls.target.add(d);camera.position.add(d)}}
   controls.update();renderer.render(scene,camera);uiTick(dt);
